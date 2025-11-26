@@ -641,11 +641,13 @@ def generate_scraper(url, scraper_name):
     print("Generating initial scraper code...")
     scraper_code = run_script_creator(scraper_prompt, config, logger)
     
-    # Define the output directory and final scraper file path
-    output_dir = os.path.join(os.path.dirname(__file__), "logs")
+    # Define working directory inside scrapers/<name> so results.json lives with the scraper
+    sanitized_name = sanitize_filename(scraper_name) or 'scraper'
+    output_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', 'scrapers', sanitized_name)
+    )
     os.makedirs(output_dir, exist_ok=True)
-    sanitized_name = sanitize_filename(scraper_name)
-    scraper_file_path = os.path.join(output_dir, f"{sanitized_name or 'scraper'}.py")
+    scraper_file_path = os.path.join(output_dir, 'scraper.py')
     
     # Test the scraper once
     print("\n" + "="*60)
