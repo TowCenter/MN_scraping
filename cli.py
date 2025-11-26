@@ -436,9 +436,9 @@ def handle_register(args):
                 existing_org['scrapers'].append(scraper)
                 
                 # Update the org in the seed data
-                print(f"Added new scraper '{scraper['name']}' to org '{args.name}'.")
+                print(f"Added new scraper '{scraper['path']}' to org '{args.name}'.")
             else:
-                print(f"Updated scraper '{scraper['name']}' for org '{args.name}'.")
+                print(f"Updated scraper '{scraper['path']}' for org '{args.name}'.")
             
             # Update the org in the seed data
             seed_data = existing_org
@@ -450,7 +450,7 @@ def handle_register(args):
             
             # Add to seed data
             seed_data = new_org 
-            print(f"Created new org '{args.name}' with scraper '{scraper['name']}'.")
+            print(f"Created new org '{args.name}' with scraper '{scraper['path']}'.")
         
         # Save updated seed data
         with open(seed_data_path, 'w', encoding='utf-8') as f:

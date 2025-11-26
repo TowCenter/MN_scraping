@@ -7,6 +7,7 @@ import re
 import dotenv
 import json
 import logging
+import tempfile
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
 import asyncio
@@ -439,28 +440,24 @@ def test_scraper_and_get_feedback(scraper_code, scraper_file_path, url):
         dict: Contains success status and error info
     """
     import subprocess
-    import tempfile
     import sys
-    
-    # Write the scraper code to a temporary file
+
+    target_dir = os.path.dirname(scraper_file_path) or os.getcwd()
+    temp_scraper_path = None
     try:
-        with open(scraper_file_path, 'w') as f:
-            f.write(scraper_code)
-        print(f"Scraper written to: {scraper_file_path}")
-    except Exception as e:
-        return {
-            'success': False,
-            'error_type': 'file_write_error',
-            'error_message': str(e)
-        }
+        with tempfile.NamedTemporaryFile(
+            mode='w', suffix='.py', dir=target_dir, delete=False
+        ) as temp_file:
+            temp_file.write(scraper_code)
+            temp_file.flush()
+            temp_scraper_path = temp_file.name
     
-    # Try to run the scraper with a short timeout
-    try:
+        # Try to run the scraper with a short timeout
         print("Testing generated scraper...")
         # Use a timeout to prevent hanging indefinitely
         result = subprocess.run(
-            [sys.executable, scraper_file_path],
-            cwd=os.path.dirname(scraper_file_path),
+            [sys.executable, temp_scraper_path],
+            cwd=target_dir,
             capture_output=True,
             text=True,
             timeout=60  # 60 second timeout
@@ -470,7 +467,7 @@ def test_scraper_and_get_feedback(scraper_code, scraper_file_path, url):
             print("✅ Scraper ran successfully!")
             
             # Check the actual results.json file to see if any articles were found
-            results_file_path = os.path.join(os.path.dirname(scraper_file_path), "results.json")
+            results_file_path = os.path.join(target_dir, "results.json")
             
             article_count = 0
             try:
@@ -523,6 +520,12 @@ def test_scraper_and_get_feedback(scraper_code, scraper_file_path, url):
             'error_type': 'execution_error',
             'error_message': str(e)
         }
+    finally:
+        if temp_scraper_path and os.path.exists(temp_scraper_path):
+            try:
+                os.remove(temp_scraper_path)
+            except OSError as cleanup_error:
+                print(f"⚠️ Could not remove temporary scraper: {cleanup_error}")
 
 def refine_scraper_with_feedback(original_code, feedback, url, scraper_name, config, logger=None):
     """
@@ -638,9 +641,11 @@ def generate_scraper(url, scraper_name):
     print("Generating initial scraper code...")
     scraper_code = run_script_creator(scraper_prompt, config, logger)
     
-    # Define the output directory and file path
+    # Define the output directory and final scraper file path
     output_dir = os.path.join(os.path.dirname(__file__), "logs")
     os.makedirs(output_dir, exist_ok=True)
+    sanitized_name = sanitize_filename(scraper_name)
+    scraper_file_path = os.path.join(output_dir, f"{sanitized_name or 'scraper'}.py")
     
     # Test the scraper once
     print("\n" + "="*60)
