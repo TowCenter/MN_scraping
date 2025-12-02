@@ -191,9 +191,8 @@ def handle_generate(args):
             # Create choices list with each scraper
             choices = ["Cancel operation"]  # Default option first
             for i, scraper in enumerate(existing_scrapers):
-                scraper_name = scraper.get('name', 'Unknown')
                 scraper_url = scraper.get('url', 'No URL')
-                choices.append(f"Overwrite: {scraper_name} ({scraper_url})")
+                choices.append(f"Overwrite: ({scraper_url})")
             choices.append("Generate a new scraper")
             
             # Prompt user for action
@@ -222,13 +221,12 @@ def handle_generate(args):
                 # Format is "Overwrite: name (url)" so we need to find which one it was
                 scraper_idx = None
                 for i, scraper in enumerate(existing_scrapers):
-                    scraper_name = scraper.get('name')
                     scraper_url = scraper.get('url')
                     scraper_path = scraper.get('path')
-                    assert scraper_name and scraper_url and scraper_path
+                    assert scraper_url and scraper_path
                     scraper_path = scraper_path.replace(".", "/") + ".py"
 
-                    if choice == f"Overwrite: {scraper_name} ({scraper_url})":
+                    if choice == f"Overwrite: ({scraper_url})":
                         scraper_idx = i
                         break
                 
