@@ -2,15 +2,22 @@
 
 # Import libraries
 import os
+import sys
 import time
 import re
+import base64
 import dotenv
 import json
 import logging
 import tempfile
-from datetime import datetime
-from jinja2 import Environment, FileSystemLoader
+import subprocess
 import asyncio
+from datetime import datetime
+
+from jinja2 import Environment, FileSystemLoader
+from openai import OpenAI
+from playwright.async_api import async_playwright
+from bs4 import BeautifulSoup
 
 # load environment variables from .env file
 dotenv.load_dotenv()
@@ -123,9 +130,6 @@ def analyze_page_structure(url, config, logger=None):
     """
     Use LLM to analyze the page structure and find article elements and pagination
     """
-    from playwright.async_api import async_playwright
-    from bs4 import BeautifulSoup
-
     async def condense_dom(url):
         # scrape dom
         async with async_playwright() as p:
@@ -194,7 +198,6 @@ def analyze_page_structure(url, config, logger=None):
         prev_class = None
         repeat_count = 0
         sample_lines = []
-        import re
         for line in lines:
             m = re.match(r".*<([a-zA-Z0-9]+)[^>]*class=\"([^\"]*)\".*>.*", line)
             if m:
@@ -233,9 +236,6 @@ def analyze_page_structure(url, config, logger=None):
     # call llm to extract selectors from chunk
     def extract_selectors_from_chunk(chunk, screenshot_bytes, config, logger=None):
         # Call LLM with chunk and screenshot and ask for selectors for articles and pagination
-        from openai import OpenAI
-        import base64
-        
         client = OpenAI(api_key=config["api_key"])
         
         # Encode screenshot to base64
@@ -414,7 +414,6 @@ def clean_scraper_code(result):
 
 # Call the OpenAI API to generate the scraper code from the prompt.
 def run_script_creator(scraper_prompt, config, logger=None):
-    from openai import OpenAI
     client = OpenAI(api_key=config["api_key"])
     response = client.chat.completions.create(
         model=config["model"],
@@ -449,9 +448,6 @@ def test_scraper_and_get_feedback(scraper_code, scraper_file_path, url):
     Returns:
         dict: Contains success status and error info
     """
-    import subprocess
-    import sys
-
     target_dir = os.path.dirname(scraper_file_path) or os.getcwd()
     temp_scraper_path = None
     try:
@@ -552,8 +548,6 @@ def refine_scraper_with_feedback(original_code, feedback, url, scraper_name, con
     Returns:
         str: Refined scraper code
     """
-    from openai import OpenAI
-    
     # Check if this is a zero results issue - if so, force headless=False
     if feedback.get('error_type') == 'zero_results':
         print("🔧 Zero results detected - setting headless=False in scraper code")
