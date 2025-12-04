@@ -138,6 +138,12 @@ def analyze_page_structure(url, config, logger=None):
             try:
                 print(f"Loading page: {url}")
                 await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                
+                # Scroll to bottom to trigger any lazy-loaded content
+                print("Scrolling to bottom of page...")
+                await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                await page.wait_for_timeout(2000)  # Wait for content to load
+                
                 print("Page loaded, extracting HTML...")
                 html = await page.content()
                 print(f"HTML extracted ({len(html)} characters)")
@@ -163,7 +169,11 @@ def analyze_page_structure(url, config, logger=None):
             attrs = []
             for attr in ['aria-label', 'value', 'placeholder', 'href', 'type', 'id', 'class']:
                 if node.has_attr(attr):
-                    attrs.append(f'{attr}="{node[attr]}"')
+                    val = node[attr]
+                    # Handle class attribute which BeautifulSoup returns as a list
+                    if isinstance(val, list):
+                        val = ' '.join(val)
+                    attrs.append(f'{attr}="{val}"')
             text = node.get_text(strip=True)
             max_text_length = 120
             if len(text) > max_text_length:
