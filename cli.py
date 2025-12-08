@@ -311,14 +311,14 @@ def handle_generate(args):
         # Get metadata about the scraper
         metadata = get_scraper_metadata(scraper_code, args.org, args.url)
         
-        logger.info(f"\n✅ Scraper generated successfully!")
-        logger.info(f"📁 Saved to: {output_path}")
-        logger.info(f"📊 Code size: {metadata['code_size']} bytes")
+        logger.info(f"\nScraper generated successfully!")
+        logger.info(f"Saved to: {output_path}")
+        logger.info(f"Code size: {metadata['code_size']} bytes")
         
         # Print features
         features = [k for k, v in metadata['features'].items() if v]
         if features:
-            logger.info(f"🔍 Features: {', '.join(features)}")
+            logger.info(f"Features: {', '.join(features)}")
         
         # Automatically register the generated scraper
         logger.info(f"\nRegistering the generated scraper for {args.org}...")

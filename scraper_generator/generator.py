@@ -737,10 +737,10 @@ def generate_scraper(url, scraper_name):
     try:
         with open(scraper_file_path, 'w') as f:
             f.write(scraper_code)
-        print(f"\n📁 Final scraper saved to: {scraper_file_path}")
+        print(f"\n Final scraper saved to: {scraper_file_path}")
         logger.info(f"Final scraper saved to: {scraper_file_path}")
     except Exception as e:
-        print(f"❌ Error saving final scraper: {e}")
+        print(f"Error saving final scraper: {e}")
         logger.error(f"Error saving final scraper: {e}")
 
     logger.info("Scraper generation completed")
@@ -751,7 +751,7 @@ def generate_scraper(url, scraper_name):
         if hasattr(handler, 'flush'):
             handler.flush()
 
-    print(f"✅ LLM interactions logged to: {logger.handlers[0].baseFilename if logger.handlers else 'No handlers!'}")
+    print(f"LLM interactions logged to: {logger.handlers[0].baseFilename if logger.handlers else 'No handlers!'}")
 
     return scraper_code
 
