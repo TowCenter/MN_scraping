@@ -2,15 +2,20 @@
 
 # Import libraries
 import os
+import sys
 import time
 import re
+import base64
 import dotenv
 import json
 import logging
-import tempfile
+import subprocess
+import asyncio
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
-import asyncio
+from openai import OpenAI
+from playwright.async_api import async_playwright
+from bs4 import BeautifulSoup
 import requests
 from urllib.parse import urlparse
 
@@ -187,9 +192,6 @@ def analyze_page_structure(url, config, logger=None):
     """
     Use LLM to analyze the page structure and find article elements and pagination
     """
-    from playwright.async_api import async_playwright
-    from bs4 import BeautifulSoup
-
     async def condense_dom(url):
         # scrape dom
         async with async_playwright() as p:
@@ -202,6 +204,12 @@ def analyze_page_structure(url, config, logger=None):
             try:
                 print(f"Loading page: {url}")
                 await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                
+                # Scroll to bottom to trigger any lazy-loaded content
+                print("Scrolling to bottom of page...")
+                await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                await page.wait_for_timeout(2000)  # Wait for content to load
+                
                 print("Page loaded, extracting HTML...")
                 html = await page.content()
                 print(f"HTML extracted ({len(html)} characters)")
@@ -227,7 +235,11 @@ def analyze_page_structure(url, config, logger=None):
             attrs = []
             for attr in ['aria-label', 'value', 'placeholder', 'href', 'type', 'id', 'class']:
                 if node.has_attr(attr):
-                    attrs.append(f'{attr}="{node[attr]}"')
+                    val = node[attr]
+                    # Handle class attribute which BeautifulSoup returns as a list
+                    if isinstance(val, list):
+                        val = ' '.join(val)
+                    attrs.append(f'{attr}="{val}"')
             text = node.get_text(strip=True)
             max_text_length = 120
             if len(text) > max_text_length:
@@ -248,7 +260,6 @@ def analyze_page_structure(url, config, logger=None):
         prev_class = None
         repeat_count = 0
         sample_lines = []
-        import re
         for line in lines:
             m = re.match(r".*<([a-zA-Z0-9]+)[^>]*class=\"([^\"]*)\".*>.*", line)
             if m:
@@ -287,9 +298,6 @@ def analyze_page_structure(url, config, logger=None):
     # call llm to extract selectors from chunk
     def extract_selectors_from_chunk(chunk, screenshot_bytes, config, logger=None):
         # Call LLM with chunk and screenshot and ask for selectors for articles and pagination
-        from openai import OpenAI
-        import base64
-
         client = OpenAI(api_key=config["api_key"])
 
         # Encode screenshot to base64
@@ -468,7 +476,6 @@ def clean_scraper_code(result):
 
 # Call the OpenAI API to generate the scraper code from the prompt.
 def run_script_creator(scraper_prompt, config, logger=None):
-    from openai import OpenAI
     client = OpenAI(api_key=config["api_key"])
     response = client.chat.completions.create(
         model=config["model"],
@@ -503,24 +510,26 @@ def test_scraper_and_get_feedback(scraper_code, scraper_file_path, url):
     Returns:
         dict: Contains success status and error info
     """
-    import subprocess
-    import sys
-
     target_dir = os.path.dirname(scraper_file_path) or os.getcwd()
-    temp_scraper_path = None
+    
+    # Write the scraper code to the actual file
     try:
-        with tempfile.NamedTemporaryFile(
-            mode='w', suffix='.py', dir=target_dir, delete=False
-        ) as temp_file:
-            temp_file.write(scraper_code)
-            temp_file.flush()
-            temp_scraper_path = temp_file.name
+        with open(scraper_file_path, 'w') as f:
+            f.write(scraper_code)
+    except Exception as e:
+        print(f"❌ Error writing scraper file: {e}")
+        return {
+            'success': False,
+            'error_type': 'write_error',
+            'error_message': str(e)
+        }
 
+    try:
         # Try to run the scraper with a short timeout
         print("Testing generated scraper...")
         # Use a timeout to prevent hanging indefinitely
         result = subprocess.run(
-            [sys.executable, temp_scraper_path],
+            [sys.executable, scraper_file_path],
             cwd=target_dir,
             capture_output=True,
             text=True,
@@ -584,12 +593,6 @@ def test_scraper_and_get_feedback(scraper_code, scraper_file_path, url):
             'error_type': 'execution_error',
             'error_message': str(e)
         }
-    finally:
-        if temp_scraper_path and os.path.exists(temp_scraper_path):
-            try:
-                os.remove(temp_scraper_path)
-            except OSError as cleanup_error:
-                print(f"⚠️ Could not remove temporary scraper: {cleanup_error}")
 
 def refine_scraper_with_feedback(original_code, feedback, url, scraper_name, config, logger=None):
     """
@@ -606,8 +609,6 @@ def refine_scraper_with_feedback(original_code, feedback, url, scraper_name, con
     Returns:
         str: Refined scraper code
     """
-    from openai import OpenAI
-
     # Check if this is a zero results issue - if so, force headless=False
     if feedback.get('error_type') == 'zero_results':
         print("🔧 Zero results detected - setting headless=False in scraper code")
@@ -729,16 +730,16 @@ def generate_scraper(url, scraper_name, output_filename="scraper.py"):
         logger.info("❌ Scraper failed, attempting refinement...")
         logger.info(f"Error details: {feedback}")
         scraper_code = refine_scraper_with_feedback(scraper_code, feedback, url, scraper_name, config, logger)
-
-    # Write the final version to file
-    try:
-        with open(scraper_file_path, 'w') as f:
-            f.write(scraper_code)
-        print(f"\n📁 Final scraper saved to: {scraper_file_path}")
-        logger.info(f"Final scraper saved to: {scraper_file_path}")
-    except Exception as e:
-        print(f"❌ Error saving final scraper: {e}")
-        logger.error(f"Error saving final scraper: {e}")
+        
+        # Write the refined version to file
+        try:
+            with open(scraper_file_path, 'w') as f:
+                f.write(scraper_code)
+            print(f"\n📁 Refined scraper saved to: {scraper_file_path}")
+            logger.info(f"Refined scraper saved to: {scraper_file_path}")
+        except Exception as e:
+            print(f"❌ Error saving refined scraper: {e}")
+            logger.error(f"Error saving refined scraper: {e}")
 
     logger.info("Scraper generation completed")
     logger.info("="*80)
@@ -748,7 +749,7 @@ def generate_scraper(url, scraper_name, output_filename="scraper.py"):
         if hasattr(handler, 'flush'):
             handler.flush()
 
-    print(f"✅ LLM interactions logged to: {logger.handlers[0].baseFilename if logger.handlers else 'No handlers!'}")
+    print(f"LLM interactions logged to: {logger.handlers[0].baseFilename if logger.handlers else 'No handlers!'}")
 
     return scraper_code
 
