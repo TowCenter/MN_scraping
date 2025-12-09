@@ -157,8 +157,59 @@ python cli.py generate \
 - `--org` or `-s`: Organization name
 - `--url` or `-u`: URL of the articles page
 - `--filename` or `-f`: Custom filename for the scraper (default: scraper.py)
-- `--model` or `-m`: AI model to use (default: uses your .env setting)
+- `--model` or `-m`: AI model to use (default: uses your .env setting, or openai/gpt-4o-mini if no .env setting is found)
 - `--verbose` or `-v`: Show detailed output during generation
+- `--batch-file` or `-b`: JSON or CSV list of org/url entries for batch generation
+
+### Batch generation
+
+Generate multiple scrapers at once using a list file:
+
+```bash
+python cli.py generate --batch-file batch_list.json
+```
+
+Supported formats:
+- JSON array, one object per URL:
+```json
+[
+   {
+      "org": "Los Angeles Times", 
+      "url": "https://www.latimes.com"
+   }, 
+   {
+      "org": "BBC", 
+      "url": "https://www.bbc.com/news"
+   },
+   {
+      "org": "BBC",
+      "url": "https://www.bbc.com/business"
+   }
+]
+```
+- JSON array, one object with multiple `urls` for an org:
+```json
+[
+   {
+      "org": "Los Angeles Times", 
+      "urls": [
+         "https://www.latimes.com",
+         "https://www.latimes.com/california",
+         "https://www.latimes.com/entertainment-arts",
+         "https://www.latimes.com/sports"
+      ]
+   }
+]
+```
+- CSV with columns `org` and `url`; optional `filename`, `template`, `model`, `verbose`
+```csv
+org,url
+Los Angeles Times,https://www.latimes.com
+BBC,https://www.bbc.com/news
+BBC,https://www.bbc.com/business
+```
+
+If you run `python cli.py generate` with no args, you'll be asked whether to use a list file or enter a single org/URL.
 
 ### Testing a scraper
 
@@ -191,6 +242,7 @@ You can skip local Python/Playwright setup by building the image and running the
 - Build the image (from the repo root): `docker build -t scraper-factory .`
 - Generate interactively (mount outputs so they persist): `docker run -it --init --rm -v "$PWD/scrapers:/app/scrapers" -v "$PWD/logs:/app/logs" --env-file .env scraper-factory generate`
 - Generate non-interactively: `docker run -it --init --rm -v "$PWD/scrapers:/app/scrapers" -v "$PWD/logs:/app/logs" -e OPENAI_API_KEY=sk-... scraper-factory generate --org "Los Angeles Times" --url "https://www.latimes.com/"`
+- Generate in batch mode (mount your list file): `docker run -it --init --rm -v "$PWD:/app" --env-file .env scraper-factory generate --batch-file batch/example.json`
 - Test an existing scraper: `docker run -it --init --rm -v "$PWD/scrapers:/app/scrapers" -v "$PWD/logs:/app/logs" --env-file .env scraper-factory test --path scrapers/los_angeles_times/scraper.py`
 
 Notes:
@@ -260,16 +312,21 @@ Run the scraper daily to track all new press releases automatically.
 
 ### Example 2: Tracking multiple local papers
 
-Generate scrapers for multiple local news sites:
+Generate scrapers for multiple local news sites with one batch file:
 
-```bash
-# Generate for each paper
-python cli.py generate --org "Chicago Tribune" --url "https://chicagotribune.com/news/"
-python cli.py generate --org "LA Times" --url "https://www.latimes.com/local"
-python cli.py generate --org "Boston Globe" --url "https://www.bostonglobe.com/metro"
+1) Save this to `batch/local_papers.json`:
+```json
+[
+  {"org": "Chicago Tribune", "url": "https://chicagotribune.com/news/"},
+  {"org": "LA Times", "url": "https://www.latimes.com/local"},
+  {"org": "Boston Globe", "url": "https://www.bostonglobe.com/metro"}
+]
 ```
 
-Create a simple script to run all scrapers at once.
+2) Generate all scrapers at once:
+```bash
+python cli.py generate --batch-file batch/local_papers.json
+```
 
 ### Example 3: Research project archive
 

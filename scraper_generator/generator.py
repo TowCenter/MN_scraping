@@ -688,7 +688,7 @@ STDERR: {feedback.get('stderr', '')}
     return clean_scraper_code(refined_code)
 
 # Main function to generate a scraper for a given URL with testing and refinement
-def generate_scraper(url, scraper_name):
+def generate_scraper(url, scraper_name, output_filename="scraper.py"):
     config = setup_config()
     logger = setup_logging(scraper_name)
 
@@ -711,7 +711,7 @@ def generate_scraper(url, scraper_name):
         os.path.join(os.path.dirname(__file__), '..', 'scrapers', sanitized_name)
     )
     os.makedirs(output_dir, exist_ok=True)
-    scraper_file_path = os.path.join(output_dir, 'scraper.py')
+    scraper_file_path = os.path.join(output_dir, output_filename)
 
     # Test the scraper once
     print("\n" + "="*60)

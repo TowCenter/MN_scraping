@@ -6,6 +6,7 @@ Command Line Interface for the Articles Scraper Generator.
 import os
 import sys
 import json
+import csv
 import argparse
 import inquirer
 import logging
@@ -88,6 +89,92 @@ def find_next_scraper_filename(org_name):
     
     return output_filename
 
+
+def load_batch_file(batch_path):
+    """
+    Load batch generation entries from a JSON or CSV file.
+    Expected fields: org (or name) and url. Optional: filename, template, model, verbose.
+    """
+    if not batch_path:
+        return []
+
+    if not os.path.exists(batch_path):
+        print(f"❌ Batch file not found: {batch_path}")
+        return []
+
+    entries = []
+    _, ext = os.path.splitext(batch_path.lower())
+
+    try:
+        if ext in [".json"]:
+            with open(batch_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            # Support object with items, or single object with org/name and urls list
+            if isinstance(data, dict) and "items" in data:
+                data = data["items"]
+            elif isinstance(data, dict) and (data.get("org") or data.get("name")) and isinstance(data.get("urls"), list):
+                data = [
+                    {"org": data.get("org") or data.get("name"), "url": url}
+                    for url in data.get("urls")
+                ]
+
+            if not isinstance(data, list):
+                print("❌ Batch JSON must be an array (or an object with an 'items' array) of objects, or a single object with org/name and urls list.")
+                return []
+            source = data
+        elif ext in [".csv"]:
+            with open(batch_path, newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                source = list(reader)
+        else:
+            print("❌ Batch file must be .json or .csv")
+            return []
+    except Exception as e:
+        print(f"❌ Could not read batch file: {e}")
+        return []
+
+    for idx, item in enumerate(source, 1):
+        if not isinstance(item, dict):
+            print(f"⚠️ Skipping entry #{idx}: expected an object/row.")
+            continue
+
+        org = item.get("org") or item.get("name")
+        url = item.get("url")
+        urls_list = item.get("urls") if isinstance(item.get("urls"), list) else None
+
+        # Expand multiple URLs for one org in a single row/object
+        if urls_list and not url:
+            for url_entry in urls_list:
+                entries.append(
+                    {
+                        "org": org,
+                        "url": url_entry,
+                        "filename": item.get("filename"),
+                        "template": item.get("template"),
+                        "model": item.get("model"),
+                        "verbose": item.get("verbose"),
+                    }
+                )
+            continue
+
+        if not org or not url:
+            print(f"⚠️ Skipping entry #{idx}: 'org' (or 'name') and 'url' are required.")
+            continue
+
+        entries.append(
+            {
+                "org": org,
+                "url": url,
+                "filename": item.get("filename"),
+                "template": item.get("template"),
+                "model": item.get("model"),
+                "verbose": item.get("verbose"),
+            }
+        )
+
+    return entries
+
 def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
@@ -106,6 +193,7 @@ def parse_args():
     generate_parser.add_argument('--model', '-m', help='LLM model to use (default: from .env)')
     generate_parser.add_argument('--template', '-t', help='Template file name to use (default: generic_template.jinja2)')
     generate_parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose output')
+    generate_parser.add_argument('--batch-file', '-b', help='Path to JSON or CSV list of org/url entries for batch generation')
 
     # Test command
     test_parser = subparsers.add_parser('test', help='Test a generated scraper')
@@ -124,10 +212,30 @@ def parse_args():
 
     # Interactive prompts for missing arguments
     if args.command == 'generate':
-        if not args.org:
-            args.org = prompt_org_name('Enter the name of the org: ')
-        if not args.url:
-            args.url = input('Enter the URL of the articles page: ')
+        if not args.batch_file and not args.org and not args.url:
+            batch_q = [
+                inquirer.Confirm(
+                    "use_batch",
+                    message="Generate multiple scrapers from a list file?",
+                    default=False,
+                )
+            ]
+            batch_answer = inquirer.prompt(batch_q)
+            if batch_answer and batch_answer.get("use_batch"):
+                batch_path_q = [
+                    inquirer.Text(
+                        "batch_file",
+                        message="Path to the list file (JSON or CSV)",
+                    )
+                ]
+                batch_path_answer = inquirer.prompt(batch_path_q)
+                args.batch_file = batch_path_answer.get("batch_file") if batch_path_answer else None
+
+        if not args.batch_file:
+            if not args.org:
+                args.org = prompt_org_name('Enter the name of the org: ')
+            if not args.url:
+                args.url = input('Enter the URL of the articles page: ')
     elif args.command == 'test':
         if not args.path and not args.org:
             questions = [
@@ -160,8 +268,27 @@ def prompt_org_name(prompt_text):
         else:
             return name
 
-def handle_generate(args):
-    """Handle the generate command"""
+def run_generate(args, batch_mode=False, robots_summary=None):
+    """Run the generate workflow for a single org."""
+
+    # Track robots.txt notes for optional end-of-run summary
+    summary_owned = robots_summary is None
+    local_robots_summary = robots_summary or {"disallow_all": [], "blocked_ai": []}
+
+    def print_local_robots_summary():
+        if not summary_owned:
+            return
+        if not local_robots_summary["disallow_all"] and not local_robots_summary["blocked_ai"]:
+            return
+        print("\nℹ️robots.txt warnings:")
+        if local_robots_summary["disallow_all"]:
+            print(" ❌  Disallow all crawlers:")
+            for robots_url in local_robots_summary["disallow_all"]:
+                print(f"   • {robots_url}")
+        if local_robots_summary["blocked_ai"]:
+            print(" ⚠️robots.txt blocks specific AI crawlers:")
+            for msg in local_robots_summary["blocked_ai"]:
+                print(f"   • {msg}")
     
     # Set model if provided
     if args.model:
@@ -182,6 +309,8 @@ def handle_generate(args):
 
         # --- robots.txt check BEFORE doing any heavy work ------------------
         robots_txt = get_robots_txt(args.url)
+        parsed = urlparse(args.url)
+        robots_url = f"{parsed.scheme}://{parsed.netloc}/robots.txt"
 
         if robots_txt.strip():
             lines = [l.strip().lower() for l in robots_txt.splitlines() if l.strip()]
@@ -204,6 +333,8 @@ def handle_generate(args):
                 )
                 print(f"❌ {msg}")
                 logger.warning(msg)
+                local_robots_summary.setdefault("disallow_all", []).append(robots_url)
+                print_local_robots_summary()
                 return 0
 
             # Otherwise, check which AI companies are blocked using your helper
@@ -211,99 +342,111 @@ def handle_generate(args):
             blocked_ai = [c for c in SCRAPER_GROUPS.keys() if c not in allowed_companies]
 
             if blocked_ai:
-                msg = "⚠️ robots.txt disallows some AI crawlers: " + ", ".join(blocked_ai)
+                msg = (
+                    " ⚠️robots.txt blocks specific AI crawlers:"
+                    + ", ".join(blocked_ai)
+                    + f". Please review robots.txt: {robots_url}"
+                )
                 print(msg)
                 logger.warning(msg)
-
-                parsed = urlparse(args.url)
-                robots_url = f"{parsed.scheme}://{parsed.netloc}/robots.txt"
-
-                # Ask the user if they still want to proceed
-                confirm_q = [
-                    inquirer.Confirm(
-                        "proceed",
-                        message=f"Do you still want to generate a scraper for this site? Please read the full robots.txt before deciding: {robots_url}",
-                        default=False,
-                    )
-                ]
-                confirm_answer = inquirer.prompt(confirm_q)
-
-                if not confirm_answer or not confirm_answer["proceed"]:
-                    logger.info("User cancelled generation due to robots.txt restrictions.")
-                    return 0
+                local_robots_summary.setdefault("blocked_ai", []).append(
+                    f"{args.url} blocks specific AI crawlers: {', '.join(blocked_ai)}. Please review robots.txt: {robots_url}"
+                )
         else:
             logger.info("No robots.txt found or it is empty; proceeding with scraper generation.")
 
         # Check for existing scrapers in the seed_data.json file
         existing_scrapers = check_org_scrapers_seed(args.org)
+        same_url_idx = None
+        for i, scraper in enumerate(existing_scrapers):
+            if scraper.get("url") == args.url:
+                same_url_idx = i
+                break
         
         if existing_scrapers:
-            # Format existing scrapers for display
-            scrapers_info = []
-            for i, scraper in enumerate(existing_scrapers, 1):
-                scraper_url = scraper.get('url', 'No URL')
-                scrapers_info.append(f"({scraper_url})")
-            
-            logger.warning(f"Found existing scrapers for {args.org}:")
-            for i, info in enumerate(scrapers_info, 1):
-                logger.info(f"  {i}. {info}")
-            
-            # Create choices list with each scraper
-            choices = ["Cancel operation"]  # Default option first
-            for i, scraper in enumerate(existing_scrapers):
-                scraper_url = scraper.get('url', 'No URL')
-                choices.append(f"Overwrite: ({scraper_url})")
-            choices.append("Generate a new scraper")
-            
-            # Prompt user for action
-            questions = [
+            matching_url = same_url_idx is not None
+            should_prompt = (not batch_mode) or matching_url
+
+            if should_prompt:
+                if matching_url:
+                    scraper_url = existing_scrapers[same_url_idx].get('url', 'No URL')
+                    choices = [
+                        "Cancel operation",
+                        f"Overwrite: ({scraper_url})",
+                        "Generate a new scraper",
+                    ]
+                else:
+                    # Format existing scrapers for display
+                    scrapers_info = []
+                    for i, scraper in enumerate(existing_scrapers, 1):
+                        scraper_url = scraper.get('url', 'No URL')
+                        scrapers_info.append(f"({scraper_url})")
+                    
+                    logger.warning(f"Found existing scrapers for {args.org}:")
+                    for i, info in enumerate(scrapers_info, 1):
+                        logger.info(f"  {i}. {info}")
+                    
+                    # Create choices list with each scraper
+                    choices = ["Cancel operation"]  # Default option first
+                    for i, scraper in enumerate(existing_scrapers):
+                        scraper_url = scraper.get('url', 'No URL')
+                        choices.append(f"Overwrite: ({scraper_url})")
+                    choices.append("Generate a new scraper")
+                
+                # Prompt user for action
+                questions = [
                 inquirer.List('choice',
-                                message="What would you like to do?",
-                                choices=choices,
-                                default="Cancel operation"
-                            ),
-            ]
-            answers = inquirer.prompt(questions)
-            choice = answers['choice']
-            
-            if choice == "Cancel operation":
-                logger.info("Operation cancelled.")
-                return 0
-            elif choice == "Generate a new scraper":
-                logger.info("Continuing with generation of a new scraper...")
+                        message="What would you like to do?",
+                        choices=choices,
+                        default="Cancel operation"
+                    ),
+                ]
+                answers = inquirer.prompt(questions)
+                choice = answers['choice']
                 
-                # Find the next available scraper filename
-                args.filename = find_next_scraper_filename(args.org)
-                logger.info(f"Will save as: {args.filename}")
-
-            elif choice.startswith("Overwrite:"):
-                # Extract index of the scraper to overwrite
-                # Format is "Overwrite: name (url)" so we need to find which one it was
-                scraper_idx = None
-                for i, scraper in enumerate(existing_scrapers):
-                    scraper_url = scraper.get('url')
-                    scraper_path = scraper.get('path')
-                    assert scraper_url and scraper_path
-                    scraper_path = scraper_path.replace(".", "/") + ".py"
-
-                    if choice == f"Overwrite: ({scraper_url})":
-                        scraper_idx = i
-                        break
-                
-                if scraper_idx is not None:
-                    args.filename = scraper_path.split("/")[-1]
-                    logger.info(f"\nOverwriting scraper: {existing_scrapers[scraper_idx]['url']}")
+                if choice == "Cancel operation":
+                    logger.info("Operation cancelled.")
+                    return 0
+                elif choice == "Generate a new scraper":
+                    logger.info("Continuing with generation of a new scraper...")
+                    
+                    # Find the next available scraper filename
+                    args.filename = find_next_scraper_filename(args.org)
                     logger.info(f"Will save as: {args.filename}")
+
+                elif choice.startswith("Overwrite:"):
+                    # Extract index of the scraper to overwrite
+                    scraper_idx = None
+                    for i, scraper in enumerate(existing_scrapers):
+                        scraper_url = scraper.get('url')
+                        scraper_path = scraper.get('path')
+                        assert scraper_url and scraper_path
+                        scraper_path = scraper_path.replace(".", "/") + ".py"
+
+                        if choice == f"Overwrite: ({scraper_url})":
+                            scraper_idx = i
+                            break
+                    
+                    if scraper_idx is not None:
+                        args.filename = scraper_path.split("/")[-1]
+                        logger.info(f"\nOverwriting scraper: {existing_scrapers[scraper_idx]['url']}")
+                        logger.info(f"Will save as: {args.filename}")
+                else:
+                    logger.error("Invalid choice. Operation cancelled.")
+                    return 1
             else:
-                logger.error("Invalid choice. Operation cancelled.")
-                return 1
+                if not args.filename or args.filename == "scraper.py":
+                    args.filename = find_next_scraper_filename(args.org)
+                logger.info(f"Found existing scrapers for {args.org}; using next available filename: {args.filename}")
+        elif not args.filename:
+            # Ensure a filename is always set
+            args.filename = find_next_scraper_filename(args.org)
 
         # Generate the scraper code
         if args.template:
-            logger.info(f"Using template: {args.template}")
-            scraper_code = generate_scraper(args.url, args.org, args.template, args.filename)
-        else:
-            scraper_code = generate_scraper(args.url, args.org)
+            logger.info(f"Using template: {args.template} (note: template selection is currently not applied during generation)")
+
+        scraper_code = generate_scraper(args.url, args.org, args.filename or "scraper.py")
         
         # Save the scraper code using save_scraper with the specified filename
         output_path = save_scraper(scraper_code, args.org, args.url, args.filename)
@@ -334,6 +477,7 @@ def handle_generate(args):
         
         subprocess.run(register_cmd)
         
+        print_local_robots_summary()
         return 0
     
     except Exception as e:
@@ -342,6 +486,60 @@ def handle_generate(args):
             import traceback
             traceback.print_exc()
         return 1
+
+
+def handle_generate_batch(args):
+    """Generate scrapers from a batch file."""
+    entries = load_batch_file(args.batch_file)
+    if not entries:
+        print("❌ No valid entries found in the batch file.")
+        return 1
+
+    exit_code = 0
+    total = len(entries)
+    robots_summary = {"disallow_all": [], "blocked_ai": []}
+
+    for idx, entry in enumerate(entries, 1):
+        print(f"\n[{idx}/{total}] Generating scraper for {entry['org']} ({entry['url']})")
+        # Prefer entry filename, then CLI-provided, otherwise None so numbering can pick next
+        entry_filename = entry.get("filename")
+        if not entry_filename and args.filename and args.filename != "scraper.py":
+            entry_filename = args.filename
+
+        entry_args = argparse.Namespace(
+            command='generate',
+            org=entry["org"],
+            url=entry["url"],
+            filename=entry_filename,
+            template=entry.get("template") or args.template,
+            model=entry.get("model") or args.model,
+            verbose=bool(entry.get("verbose")) or args.verbose,
+            batch_file=args.batch_file,
+        )
+
+        result = run_generate(entry_args, batch_mode=True, robots_summary=robots_summary)
+        if result != 0:
+            exit_code = result
+
+    if robots_summary["disallow_all"] or robots_summary["blocked_ai"]:
+        print("\nℹ️robots.txt warnings:")
+        if robots_summary["disallow_all"]:
+            print(" ❌ robots.txt disallows all crawlers:")
+            for robots_url in robots_summary["disallow_all"]:
+                print(f"   • {robots_url}")
+        if robots_summary["blocked_ai"]:
+            print(" ⚠️robots.txt blocks specific AI crawlers:")
+            for msg in robots_summary["blocked_ai"]:
+                print(f"   • {msg}")
+
+    return exit_code
+
+
+def handle_generate(args):
+    """Handle the generate command (single or batch)."""
+    if getattr(args, "batch_file", None):
+        return handle_generate_batch(args)
+    return run_generate(args)
 
 def handle_test(args):
     """Handle the test command"""
