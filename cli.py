@@ -335,7 +335,7 @@ def run_generate(args, batch_mode=False, robots_summary=None):
                 logger.warning(msg)
                 local_robots_summary.setdefault("disallow_all", []).append(robots_url)
                 print_local_robots_summary()
-                return 0
+                return 0, None
 
             # Otherwise, check which AI companies are blocked using your helper
             allowed_companies = get_allowed_scraper_companies(robots_txt)
@@ -406,7 +406,7 @@ def run_generate(args, batch_mode=False, robots_summary=None):
                 
                 if choice == "Cancel operation":
                     logger.info("Operation cancelled.")
-                    return 0
+                    return 0, None
                 elif choice == "Generate a new scraper":
                     logger.info("Continuing with generation of a new scraper...")
                     
@@ -433,7 +433,7 @@ def run_generate(args, batch_mode=False, robots_summary=None):
                         logger.info(f"Will save as: {args.filename}")
                 else:
                     logger.error("Invalid choice. Operation cancelled.")
-                    return 1
+                    return 1, None
             else:
                 if not args.filename or args.filename == "scraper.py":
                     args.filename = find_next_scraper_filename(args.org)
@@ -478,14 +478,14 @@ def run_generate(args, batch_mode=False, robots_summary=None):
         subprocess.run(register_cmd)
         
         print_local_robots_summary()
-        return 0
-    
+        return 0, test_results
+
     except Exception as e:
         logger.error(f"\n❌ Error generating scraper: {str(e)}")
         if args.verbose:
             import traceback
             traceback.print_exc()
-        return 1
+        return 1, None
 
 
 def handle_generate_batch(args):
@@ -500,6 +500,7 @@ def handle_generate_batch(args):
 
     generated = []
     failed = []
+    tests_failed = []
 
     for idx, entry in enumerate(entries, 1):
         org = entry['org']
@@ -525,11 +526,13 @@ def handle_generate_batch(args):
         )
 
         try:
-            result = run_generate(entry_args, batch_mode=True, robots_summary=robots_summary)
+            result, test_results = run_generate(entry_args, batch_mode=True, robots_summary=robots_summary)
             if result == 0:
                 folder_name = sanitize_filename(org)
                 output_path = os.path.join(SCRAPER_OUTPUT_DIR, folder_name, entry_args.filename)
                 generated.append({"name": org, "url": url, "path": output_path})
+                if test_results and not test_results.get("all_passed"):
+                    tests_failed.append({"name": org, "url": url})
             else:
                 failed.append({"name": org, "url": url})
         except Exception as e:
@@ -540,13 +543,19 @@ def handle_generate_batch(args):
     print(f"\n{'='*60}")
     print("Batch Generation Summary")
     print(f"{'='*60}")
-    print(f"  Total:     {total}")
-    print(f"  Generated: {len(generated)}")
-    print(f"  Failed:    {len(failed)}")
+    print(f"  Total:        {total}")
+    print(f"  Generated:    {len(generated)}")
+    print(f"  Failed:       {len(failed)}")
+    print(f"  Tests failed: {len(tests_failed)}")
 
     if failed:
-        print(f"\n  Failed entries:")
+        print(f"\n  Failed to generate:")
         for entry in failed:
+            print(f"    - {entry['name']} ({entry['url']})")
+
+    if tests_failed:
+        print(f"\n  Generated but failed tests:")
+        for entry in tests_failed:
             print(f"    - {entry['name']} ({entry['url']})")
 
     if robots_summary["disallow_all"] or robots_summary["blocked_ai"]:
@@ -568,7 +577,8 @@ def handle_generate(args):
     """Handle the generate command (single or batch)."""
     if getattr(args, "batch_file", None):
         return handle_generate_batch(args)
-    return run_generate(args)
+    result, _test_results = run_generate(args)
+    return result
 
 def handle_test(args):
     """Handle the test command"""
