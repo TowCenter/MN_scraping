@@ -594,6 +594,41 @@ def test_scraper_and_get_feedback(scraper_code, scraper_file_path, url):
             'error_message': str(e)
         }
 
+def apply_headless_false(code):
+    """Force headless=False in scraper code for sites that need a visible browser."""
+    modified = code
+
+    # Case 1: Replace existing headless=True with headless=False
+    if re.search(r'headless\s*=\s*True', modified, re.IGNORECASE):
+        modified = re.sub(
+            r'headless\s*=\s*True',
+            'headless=False',
+            modified,
+            flags=re.IGNORECASE
+        )
+        print("✅ Changed headless=True to headless=False")
+
+    # Case 2: Browser launch without headless parameter - add it
+    elif re.search(r'\.chromium\.launch\(\s*\)', modified):
+        modified = re.sub(
+            r'\.chromium\.launch\(\s*\)',
+            '.chromium.launch(headless=False)',
+            modified
+        )
+        print("✅ Added headless=False to browser launch")
+
+    # Case 3: Browser launch with other parameters but no headless
+    elif re.search(r'\.chromium\.launch\([^)]*\)', modified) and 'headless' not in modified:
+        modified = re.sub(
+            r'(\.chromium\.launch\()',
+            r'\1headless=False, ',
+            modified
+        )
+        print("✅ Added headless=False to browser launch with existing parameters")
+
+    return modified
+
+
 def refine_scraper_with_feedback(original_code, feedback, url, scraper_name, config, logger=None):
     """
     Use LLM to refine scraper code based on test feedback
@@ -609,45 +644,6 @@ def refine_scraper_with_feedback(original_code, feedback, url, scraper_name, con
     Returns:
         str: Refined scraper code
     """
-    # Check if this is a zero results issue - if so, force headless=False
-    if feedback.get('error_type') == 'zero_results':
-        print("🔧 Zero results detected - setting headless=False in scraper code")
-
-        import re
-        modified_code = original_code
-
-        # Case 1: Replace existing headless=True with headless=False
-        if re.search(r'headless\s*=\s*True', modified_code, re.IGNORECASE):
-            modified_code = re.sub(
-                r'headless\s*=\s*True',
-                'headless=False',
-                modified_code,
-                flags=re.IGNORECASE
-            )
-            print("✅ Changed headless=True to headless=False")
-
-        # Case 2: Browser launch without headless parameter - add it
-        elif re.search(r'\.chromium\.launch\(\s*\)', modified_code):
-            modified_code = re.sub(
-                r'\.chromium\.launch\(\s*\)',
-                '.chromium.launch(headless=False)',
-                modified_code
-            )
-            print("✅ Added headless=False to browser launch")
-
-        # Case 3: Browser launch with other parameters but no headless
-        elif re.search(r'\.chromium\.launch\([^)]*\)', modified_code) and 'headless' not in modified_code:
-            # Find the launch call and add headless=False as the first parameter
-            modified_code = re.sub(
-                r'(\.chromium\.launch\()',
-                r'\1headless=False, ',
-                modified_code
-            )
-            print("✅ Added headless=False to browser launch with existing parameters")
-
-        return modified_code
-
-    # Original LLM-based refinement for other errors
     error_info = f"""
 Error Type: {feedback.get('error_type', 'unknown')}
 Exit Code: {feedback.get('exit_code', 'N/A')}
@@ -688,6 +684,58 @@ STDERR: {feedback.get('stderr', '')}
 
     return clean_scraper_code(refined_code)
 
+def refine_pagination(original_code, next_page_selectors, next_page_examples,
+                      page_counts, url, scraper_name, config, logger=None):
+    """
+    Use LLM to fix the advance_page() function when pagination doesn't produce new articles.
+    Only called once.
+
+    Args:
+        original_code (str): The scraper code with broken pagination
+        next_page_selectors (list): CSS selectors for next-page elements from page analysis
+        next_page_examples (dict): HTML examples for each next-page selector
+        page_counts (list): Cumulative article counts per page (e.g., [10, 10, 10] = broken)
+        url (str): Target URL
+        scraper_name (str): Name of the scraper
+        config (dict): API config
+        logger: Logger instance
+
+    Returns:
+        str: Refined scraper code with fixed advance_page()
+    """
+    prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
+    env = Environment(loader=FileSystemLoader(prompts_dir))
+    template = env.get_template("pagination_refinement_prompt.jinja2")
+
+    refinement_prompt = template.render(
+        original_code=original_code,
+        next_page_selectors=json.dumps(next_page_selectors, indent=2),
+        next_page_examples=format_selectors_with_examples(next_page_examples),
+        page_counts=page_counts,
+        url=url
+    )
+
+    client = OpenAI(api_key=config["api_key"])
+
+    print("🔧 Refining pagination based on test feedback...")
+    response = client.chat.completions.create(
+        model=config["model"],
+        messages=[
+            {"role": "system", "content": "You are an expert at debugging Playwright-based web scrapers. Focus specifically on fixing the advance_page() function."},
+            {"role": "user", "content": refinement_prompt}
+        ],
+        temperature=0.1,
+        max_tokens=4000
+    )
+
+    refined_code = response.choices[0].message.content
+
+    if logger:
+        log_llm_interaction(logger, "Pagination Refinement", refinement_prompt, refined_code, config["model"])
+
+    return clean_scraper_code(refined_code)
+
+
 # Main function to generate a scraper for a given URL with testing and refinement
 def generate_scraper(url, scraper_name, output_filename="scraper.py"):
     config = setup_config()
@@ -714,32 +762,193 @@ def generate_scraper(url, scraper_name, output_filename="scraper.py"):
     os.makedirs(output_dir, exist_ok=True)
     scraper_file_path = os.path.join(output_dir, output_filename)
 
-    # Test the scraper once
+    # Save page_analysis for later use in pagination debugging
+    page_analysis_path = os.path.join(output_dir, "page_analysis.json")
+    with open(page_analysis_path, 'w') as f:
+        json.dump(page_analysis, f, indent=2)
+    logger.info(f"Page analysis saved to: {page_analysis_path}")
+
+    # Helper to write scraper code to disk
+    def _save_scraper(code):
+        with open(scraper_file_path, 'w') as f:
+            f.write(code)
+
+    _save_scraper(scraper_code)
+
+    # ── Stepped debugging pipeline ──────────────────────────────────
+    from scraper_generator.test import (
+        TestContext, RequiredFunctionsTest, GetFirstPageTest,
+        GetAllArticlesTest, ResultFileExistsTest, ResultFileReadableTest,
+        DataStructureTest, ItemKeysTest, NonBlankValuesTest,
+        DateFormatTest, UrlFormatTest,
+    )
+    from pathlib import Path
+
+    def _run_test(test_cls, context):
+        """Run a single test, print its status, return the instance."""
+        t = test_cls()
+        t.run(context)
+        print(t.format_status())
+        return t
+
+    # -- Step 1: Check required functions + first page -----------------
     print("\n" + "="*60)
-    print("TESTING GENERATED SCRAPER")
+    print("STEP 1: TESTING SCRAPER STRUCTURE & FIRST PAGE")
     print("="*60)
-    logger.info("TESTING GENERATED SCRAPER")
+    logger.info("STEP 1: TESTING SCRAPER STRUCTURE & FIRST PAGE")
 
-    feedback = test_scraper_and_get_feedback(scraper_code, scraper_file_path, url)
+    ctx = TestContext(Path(scraper_file_path))
+    func_test = _run_test(RequiredFunctionsTest, ctx)
 
-    if feedback['success']:
-        print("✅ Scraper ran successfully!")
-        logger.info("✅ Scraper ran successfully!")
+    if not func_test.passed:
+        # Required functions missing — send to LLM for structural fix
+        details = func_test.format_failure_details(ctx.data or [])
+        print(f"\n❌ Required functions check failed:\n{details}")
+        logger.info(f"Required functions failed: {details}")
+        feedback = {
+            'error_type': 'runtime_error',
+            'error_message': f'Required functions/parameters missing:\n{details}',
+            'stdout': '', 'stderr': '',
+        }
+        scraper_code = refine_scraper_with_feedback(
+            scraper_code, feedback, url, scraper_name, config, logger)
+        _save_scraper(scraper_code)
+        # Rebuild context after rewrite
+        ctx = TestContext(Path(scraper_file_path))
+        func_test = _run_test(RequiredFunctionsTest, ctx)
+
+    first_page_test = _run_test(GetFirstPageTest, ctx)
+
+    # -- Step 2: Zero articles → try headless=False --------------------
+    if first_page_test.passed is False:
+        # Check if it was a zero-results issue (returned empty list, no crash)
+        zero_results = any(
+            'returned 0 items' in f.get('error', '')
+            for f in first_page_test.failures
+        )
+        crashed = any(
+            'returned 0 items' not in f.get('error', '')
+            for f in first_page_test.failures
+        )
+
+        if zero_results and not crashed:
+            print("\n" + "="*60)
+            print("STEP 2: ZERO ARTICLES — TRYING headless=False")
+            print("="*60)
+            logger.info("STEP 2: Applying headless=False")
+
+            scraper_code = apply_headless_false(scraper_code)
+            _save_scraper(scraper_code)
+
+            ctx = TestContext(Path(scraper_file_path))
+            _run_test(RequiredFunctionsTest, ctx)
+            first_page_test = _run_test(GetFirstPageTest, ctx)
+
+    # -- Step 3: Runtime error → LLM refinement ------------------------
+    if first_page_test.passed is False:
+        error_details = "\n".join(
+            f.get('error', str(f)) for f in first_page_test.failures
+        )
+        crashed = any(
+            'returned 0 items' not in f.get('error', '')
+            for f in first_page_test.failures
+        )
+
+        if crashed:
+            print("\n" + "="*60)
+            print("STEP 3: RUNTIME ERROR — LLM REFINEMENT")
+            print("="*60)
+            logger.info(f"STEP 3: Runtime error refinement. Errors:\n{error_details}")
+
+            feedback = {
+                'error_type': 'runtime_error',
+                'error_message': error_details,
+                'stdout': '', 'stderr': error_details,
+            }
+            scraper_code = refine_scraper_with_feedback(
+                scraper_code, feedback, url, scraper_name, config, logger)
+            _save_scraper(scraper_code)
+
+            ctx = TestContext(Path(scraper_file_path))
+            _run_test(RequiredFunctionsTest, ctx)
+            first_page_test = _run_test(GetFirstPageTest, ctx)
+
+    # -- Step 4: Other first-page issues → LLM refinement ---------------
+    if first_page_test.passed is False:
+        error_details = "\n".join(
+            f.get('error', str(f)) for f in first_page_test.failures
+        )
+        print("\n" + "="*60)
+        print("STEP 4: FIRST PAGE ISSUES — LLM REFINEMENT")
+        print("="*60)
+        logger.info(f"STEP 4: First page issues refinement. Errors:\n{error_details}")
+
+        feedback = {
+            'error_type': 'runtime_error',
+            'error_message': error_details,
+            'stdout': '', 'stderr': error_details,
+        }
+        scraper_code = refine_scraper_with_feedback(
+            scraper_code, feedback, url, scraper_name, config, logger)
+        _save_scraper(scraper_code)
+
+        ctx = TestContext(Path(scraper_file_path))
+        _run_test(RequiredFunctionsTest, ctx)
+        first_page_test = _run_test(GetFirstPageTest, ctx)
+
+    # -- Step 5: Pagination test ----------------------------------------
+    if first_page_test.passed:
+        print("\n" + "="*60)
+        print("STEP 5: TESTING PAGINATION")
+        print("="*60)
+        logger.info("STEP 5: Testing pagination")
+
+        pagination_test = _run_test(GetAllArticlesTest, ctx)
+
+        if not pagination_test.passed and ctx.pagination_failed:
+            print("❌ Pagination failed, attempting pagination-specific refinement...")
+            logger.info(f"Pagination failed. Page counts: {ctx.pagination_page_counts}")
+
+            with open(page_analysis_path, 'r') as f:
+                saved_page_analysis = json.load(f)
+
+            scraper_code = refine_pagination(
+                scraper_code,
+                saved_page_analysis.get("next_page_selectors", []),
+                saved_page_analysis.get("next_page_examples", {}),
+                ctx.pagination_page_counts,
+                url, scraper_name, config, logger
+            )
+            _save_scraper(scraper_code)
+            print(f"📁 Refined scraper saved to: {scraper_file_path}")
+            logger.info(f"Pagination-refined scraper saved to: {scraper_file_path}")
     else:
-        print("❌ Scraper failed, attempting one refinement...")
-        logger.info("❌ Scraper failed, attempting refinement...")
-        logger.info(f"Error details: {feedback}")
-        scraper_code = refine_scraper_with_feedback(scraper_code, feedback, url, scraper_name, config, logger)
-        
-        # Write the refined version to file
-        try:
-            with open(scraper_file_path, 'w') as f:
-                f.write(scraper_code)
-            print(f"\n📁 Refined scraper saved to: {scraper_file_path}")
-            logger.info(f"Refined scraper saved to: {scraper_file_path}")
-        except Exception as e:
-            print(f"❌ Error saving refined scraper: {e}")
-            logger.error(f"Error saving refined scraper: {e}")
+        print("\n⚠️ Skipping pagination test — first page still failing.")
+        logger.info("Skipping pagination test — first page still failing.")
+
+    # -- Step 6: Validation tests (informational) -----------------------
+    if ctx.data:
+        print("\n" + "="*60)
+        print("STEP 6: DATA VALIDATION")
+        print("="*60)
+        for test_cls in [ItemKeysTest, NonBlankValuesTest, DateFormatTest, UrlFormatTest]:
+            _run_test(test_cls, ctx)
+
+    # -- Final: Full test suite summary -----------------------------------
+    print("\n" + "="*60)
+    print("FINAL SUMMARY: FULL TEST SUITE")
+    print("="*60)
+    logger.info("FINAL SUMMARY: Running full test suite")
+
+    from scraper_generator.test import run_tests_detailed
+    final_results = run_tests_detailed(scraper_file_path)
+
+    if final_results["all_passed"]:
+        print("\n✅ All tests passed!")
+        logger.info("✅ All tests passed!")
+    else:
+        print("\n❌ Some tests still failing.")
+        logger.info("❌ Some tests still failing.")
 
     logger.info("Scraper generation completed")
     logger.info("="*80)
@@ -751,7 +960,7 @@ def generate_scraper(url, scraper_name, output_filename="scraper.py"):
 
     print(f"LLM interactions logged to: {logger.handlers[0].baseFilename if logger.handlers else 'No handlers!'}")
 
-    return scraper_code
+    return scraper_code, final_results
 
 
 def make_prompt(url, scraper_name, page_analysis, template_name="generic_template.jinja2"):

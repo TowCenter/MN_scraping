@@ -13,15 +13,32 @@ Usage:
 from __future__ import annotations
 
 import json
-import subprocess
 import sys
 import urllib.parse
 import ast
-import inspect
+import asyncio
+import importlib.util
 from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+
+def _load_scraper_module(scraper_path: Path):
+    """Dynamically import a scraper module from an arbitrary file path."""
+    spec = importlib.util.spec_from_file_location("scraper_under_test", str(scraper_path))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _run_async(coro):
+    """Run an async coroutine from synchronous test code."""
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
 
 # ---------------------------------------------------------------------------
 # Test Framework
@@ -75,33 +92,18 @@ class Test:
 
 class TestContext:
     """Holds shared data and state for tests."""
-    
+
     def __init__(self, scraper_path: Path):
         self.scraper_path = scraper_path
         self.results_path = scraper_path.parent / "result.json"
         self.data: Optional[List[Dict[str, Any]]] = None
-        self.scraper_process: Optional[subprocess.CompletedProcess] = None
+        self.first_page_articles: Optional[List[Dict[str, Any]]] = None
+        self.pagination_failed: bool = False
+        self.pagination_page_counts: List[int] = []
 
 # ---------------------------------------------------------------------------
 # Test Implementations
 # ---------------------------------------------------------------------------
-
-class RunScraperTest(Test):
-    """Check if scraper executes successfully."""
-    
-    def run(self, context: TestContext) -> bool:
-        try:
-            context.scraper_process = subprocess.run(
-                [sys.executable, str(context.scraper_path)],
-                capture_output=False,
-                text=True,
-                check=False,
-            )
-            self.passed = context.scraper_process.returncode == 0
-        except Exception:
-            self.passed = False
-        
-        return self.passed
 
 class ResultFileExistsTest(Test):
     """Check if result.json file was created."""
@@ -302,24 +304,147 @@ class RequiredFunctionsTest(Test):
                 details.append(f"Error: {failure['error']}")
 
         return "\n".join(details)
-    
+
+
+class GetFirstPageTest(Test):
+    """Check if get_first_page() returns a non-empty list of article dicts."""
+
+    def run(self, context: TestContext) -> bool:
+        try:
+            module = _load_scraper_module(context.scraper_path)
+            articles = _run_async(module.get_first_page())
+
+            if not isinstance(articles, list) or len(articles) == 0:
+                count = len(articles) if isinstance(articles, list) else "N/A"
+                self.failures.append({"error": f"get_first_page returned {count} items"})
+                self.passed = False
+                return False
+
+            for i, article in enumerate(articles):
+                if not isinstance(article, dict):
+                    self.failures.append({"index": i, "error": f"Item is {type(article).__name__}, not dict"})
+
+            self.passed = len(self.failures) == 0
+            context.first_page_articles = articles
+        except Exception as exc:
+            self.failures.append({"error": str(exc)})
+            self.passed = False
+
+        return self.passed
+
+    def format_failure_details(self, data: List[Dict[str, Any]]) -> str:
+        return "\n".join(f.get("error", str(f)) for f in self.failures)
+
+
+class GetAllArticlesTest(Test):
+    """Check if get_all_articles works across 3 pages with pagination growth."""
+
+    MAX_PAGES = 3
+
+    def run(self, context: TestContext) -> bool:
+        try:
+            module = _load_scraper_module(context.scraper_path)
+            articles, page_counts = _run_async(self._scrape_with_growth_tracking(module))
+
+            context.pagination_page_counts = page_counts
+
+            if not isinstance(articles, list) or len(articles) == 0:
+                self.failures.append({"error": f"get_all_articles returned 0 articles across {self.MAX_PAGES} pages"})
+                self.passed = False
+                context.pagination_failed = True
+                return False
+
+            # Write result.json for downstream file-based tests
+            result_path = context.scraper_path.parent / "result.json"
+            with open(result_path, "w") as f:
+                json.dump(articles, f, indent=2)
+
+            # Populate context.data for downstream validation tests
+            context.data = articles
+
+            # Check pagination growth: article count should increase after each page
+            growth_failures = []
+            for i in range(1, len(page_counts)):
+                if page_counts[i] <= page_counts[i - 1]:
+                    growth_failures.append({
+                        "page": i + 1,
+                        "prev_count": page_counts[i - 1],
+                        "curr_count": page_counts[i],
+                        "error": f"Page {i + 1}: article count did not increase ({page_counts[i - 1]} -> {page_counts[i]}). Pagination may be broken."
+                    })
+
+            if growth_failures:
+                self.failures = growth_failures
+                self.passed = False
+                context.pagination_failed = True
+            else:
+                self.passed = True
+                context.pagination_failed = False
+
+        except Exception as exc:
+            self.failures.append({"error": str(exc)})
+            self.passed = False
+            context.pagination_failed = True
+
+        return self.passed
+
+    async def _scrape_with_growth_tracking(self, module):
+        """Navigate through up to MAX_PAGES pages, returning articles and per-page cumulative counts."""
+        async with module.PlaywrightContext() as browser_context:
+            page = await browser_context.new_page()
+            await page.goto(module.base_url)
+
+            all_articles = []
+            seen = set()
+            page_counts = []
+
+            for page_num in range(self.MAX_PAGES):
+                page_articles = await module.scrape_page(page)
+                for article in page_articles:
+                    key = tuple(sorted(article.items()))
+                    if key not in seen:
+                        seen.add(key)
+                        all_articles.append(article)
+
+                page_counts.append(len(all_articles))
+
+                if page_num < self.MAX_PAGES - 1:
+                    await module.advance_page(page)
+
+            await page.close()
+
+        return all_articles, page_counts
+
+    def format_failure_details(self, data: List[Dict[str, Any]]) -> str:
+        details = []
+        for f in self.failures:
+            if "error" in f:
+                details.append(f["error"])
+            else:
+                details.append(str(f))
+        if hasattr(self, '_context_page_counts'):
+            details.append(f"Page counts: {self._context_page_counts}")
+        return "\n".join(details)
+
+
 # ---------------------------------------------------------------------------
 # Test Runner
 # ---------------------------------------------------------------------------
 
-def run_tests(scraper_path: str | Path) -> bool:
-    """Run the full test sequence. Return True if all checks pass."""
+def run_tests_detailed(scraper_path: str | Path) -> dict:
+    """Run the full test sequence. Return dict with detailed results."""
     scraper = Path(scraper_path).resolve()
     if not scraper.is_file():
         raise FileNotFoundError(f"Scraper not found: {scraper}")
 
     # Create test context
     context = TestContext(scraper)
-    
+
     # Define tests to run in sequence
     tests = [
-        RunScraperTest(),
-        RequiredFunctionsTest(),  # Add this test first to check structure
+        RequiredFunctionsTest(),
+        GetFirstPageTest(),
+        GetAllArticlesTest(),
         ResultFileExistsTest(),
         ResultFileReadableTest(),
         DataStructureTest(),
@@ -328,43 +453,44 @@ def run_tests(scraper_path: str | Path) -> bool:
         DateFormatTest(),
         UrlFormatTest(),
     ]
-    
+
     # Run all tests and collect results
     all_passed = True
-    stop_on_failure = False
-    
+
     for test in tests:
         passed = test.run(context)
         print(test.format_status())
-        
+
         if not passed:
             all_passed = False
-            
-            # Show scraper errors if that test failed
-            if test.name == "Run scraper" and context.scraper_process and context.scraper_process.stderr:
-                print("\nScraper error output:")
-                print(context.scraper_process.stderr)
-                break
-            
+
             # For RequiredFunctionsTest, show function-specific details
             if isinstance(test, RequiredFunctionsTest):
                 failure_details = test.format_failure_details(context.data or [])
                 if failure_details:
                     print(f"\nFunction validation issues:")
                     print(failure_details)
-                                
+
             # For data-related tests, show failure details
-            if context.data is not None:
-                print(f"\nItems with {test.name.lower()} issues:")
-                print(test.format_failure_details(context.data))
-            
-            # Stop testing after first failure (except for scraper execution)
-            if stop_on_failure and test.name != "Run scraper":
-                break
+            elif context.data is not None:
+                details = test.format_failure_details(context.data)
+                if details:
+                    print(f"\nItems with {test.name.lower()} issues:")
+                    print(details)
 
     print("-" * 80)
     print("All tests passed. " + "✅" if all_passed else "❌")
-    return all_passed
+
+    return {
+        "all_passed": all_passed,
+        "pagination_failed": context.pagination_failed,
+        "pagination_page_counts": context.pagination_page_counts,
+    }
+
+
+def run_tests(scraper_path: str | Path) -> bool:
+    """Run the full test sequence. Return True if all checks pass."""
+    return run_tests_detailed(scraper_path)["all_passed"]
 
 # ---------------------------------------------------------------------------
 # CLI entry‑point
