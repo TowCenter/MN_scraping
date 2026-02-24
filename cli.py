@@ -335,7 +335,7 @@ def run_generate(args, batch_mode=False, robots_summary=None):
                 logger.warning(msg)
                 local_robots_summary.setdefault("disallow_all", []).append(robots_url)
                 print_local_robots_summary()
-                return 0
+                return 0, None
 
             # Otherwise, check which AI companies are blocked using your helper
             allowed_companies = get_allowed_scraper_companies(robots_txt)
@@ -406,7 +406,7 @@ def run_generate(args, batch_mode=False, robots_summary=None):
                 
                 if choice == "Cancel operation":
                     logger.info("Operation cancelled.")
-                    return 0
+                    return 0, None
                 elif choice == "Generate a new scraper":
                     logger.info("Continuing with generation of a new scraper...")
                     
@@ -433,7 +433,7 @@ def run_generate(args, batch_mode=False, robots_summary=None):
                         logger.info(f"Will save as: {args.filename}")
                 else:
                     logger.error("Invalid choice. Operation cancelled.")
-                    return 1
+                    return 1, None
             else:
                 if not args.filename or args.filename == "scraper.py":
                     args.filename = find_next_scraper_filename(args.org)
@@ -446,7 +446,7 @@ def run_generate(args, batch_mode=False, robots_summary=None):
         if args.template:
             logger.info(f"Using template: {args.template} (note: template selection is currently not applied during generation)")
 
-        scraper_code = generate_scraper(args.url, args.org, args.filename or "scraper.py")
+        scraper_code, test_results = generate_scraper(args.url, args.org, args.filename or "scraper.py")
         
         # Save the scraper code using save_scraper with the specified filename
         output_path = save_scraper(scraper_code, args.org, args.url, args.filename)
@@ -478,14 +478,14 @@ def run_generate(args, batch_mode=False, robots_summary=None):
         subprocess.run(register_cmd)
         
         print_local_robots_summary()
-        return 0
-    
+        return 0, test_results
+
     except Exception as e:
         logger.error(f"\n❌ Error generating scraper: {str(e)}")
         if args.verbose:
             import traceback
             traceback.print_exc()
-        return 1
+        return 1, None
 
 
 def handle_generate_batch(args):
@@ -500,6 +500,7 @@ def handle_generate_batch(args):
 
     generated = []
     failed = []
+    tests_failed = []
 
     for idx, entry in enumerate(entries, 1):
         org = entry['org']
@@ -525,51 +526,36 @@ def handle_generate_batch(args):
         )
 
         try:
-            result = run_generate(entry_args, batch_mode=True, robots_summary=robots_summary)
+            result, test_results = run_generate(entry_args, batch_mode=True, robots_summary=robots_summary)
             if result == 0:
                 folder_name = sanitize_filename(org)
                 output_path = os.path.join(SCRAPER_OUTPUT_DIR, folder_name, entry_args.filename)
                 generated.append({"name": org, "url": url, "path": output_path})
+                if test_results and not test_results.get("all_passed"):
+                    tests_failed.append({"name": org, "url": url})
             else:
                 failed.append({"name": org, "url": url})
         except Exception as e:
             logger.error(f"Error generating scraper for {org}: {e}")
             failed.append({"name": org, "url": url})
 
-    # Run tests on successfully generated scrapers
-    tests_passed = 0
-    tests_failed = 0
-    for entry in generated:
-        path = entry['path']
-        if os.path.exists(path):
-            print(f"\nTesting {entry['name']} ({path})...")
-            try:
-                success = run_tests(path)
-                if success:
-                    tests_passed += 1
-                else:
-                    tests_failed += 1
-            except Exception as e:
-                logger.error(f"Error testing {entry['name']}: {e}")
-                tests_failed += 1
-        else:
-            tests_failed += 1
-
-    # Print summary
+    # Print summary (tests already run inside generate_scraper)
     print(f"\n{'='*60}")
     print("Batch Generation Summary")
     print(f"{'='*60}")
-    print(f"  Total:     {total}")
-    print(f"  Generated: {len(generated)}")
-    print(f"  Failed:    {len(failed)}")
-    if generated:
-        print(f"\n  Tests:")
-        print(f"  Passed:    {tests_passed}")
-        print(f"  Failed:    {tests_failed}")
+    print(f"  Total:        {total}")
+    print(f"  Generated:    {len(generated)}")
+    print(f"  Failed:       {len(failed)}")
+    print(f"  Tests failed: {len(tests_failed)}")
 
     if failed:
-        print(f"\n  Failed entries:")
+        print(f"\n  Failed to generate:")
         for entry in failed:
+            print(f"    - {entry['name']} ({entry['url']})")
+
+    if tests_failed:
+        print(f"\n  Generated but failed tests:")
+        for entry in tests_failed:
             print(f"    - {entry['name']} ({entry['url']})")
 
     if robots_summary["disallow_all"] or robots_summary["blocked_ai"]:
@@ -591,7 +577,8 @@ def handle_generate(args):
     """Handle the generate command (single or batch)."""
     if getattr(args, "batch_file", None):
         return handle_generate_batch(args)
-    return run_generate(args)
+    result, _test_results = run_generate(args)
+    return result
 
 def handle_test(args):
     """Handle the test command"""

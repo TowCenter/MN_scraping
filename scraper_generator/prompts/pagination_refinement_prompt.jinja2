@@ -1,0 +1,30 @@
+The advance_page() function in this web scraper is not working correctly. After calling advance_page() and then scrape_page(), no new articles are being found.
+
+Here is the full scraper code:
+```python
+{{ original_code }}
+```
+
+**Pagination test results:**
+- Article counts per page: {{ page_counts }}
+- Expected: counts should increase after each page (e.g., [10, 20, 30])
+- Actual: counts are stagnant, meaning advance_page() is not navigating to new content
+
+**Available next-page selectors from DOM analysis:**
+{{ next_page_selectors }}
+
+**HTML examples of next-page elements found on the page:**
+{{ next_page_examples }}
+
+**Target URL:** {{ url }}
+
+Please fix the advance_page() function. Common issues include:
+1. The selector for the "next" button/link is wrong or too specific
+2. The click is happening but the page needs to wait for navigation/content to load
+3. The page uses URL-based pagination (e.g., ?page=2) rather than button clicks
+4. The "next" element needs to be scrolled into view before clicking
+5. The infinite scroll fallback is being used when there IS a next button
+
+Focus ONLY on fixing advance_page(). Do not change scrape_page() or other functions unless absolutely necessary.
+
+Return ONLY the corrected Python code, including the new function and the whole scraper. No explanations, markdown blocks, or additional text.
