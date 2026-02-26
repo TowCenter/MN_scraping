@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 from dateutil.parser import parse as parse_date, ParserError
-from utils import setup_logging
+from scraper_generator.utils import setup_logging
 from seed import main as run_seed
 from scraper_generator.generator import load_content_config
 

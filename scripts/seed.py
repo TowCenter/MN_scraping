@@ -14,7 +14,7 @@ from pymongo.errors import PyMongoError
 from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from utils import setup_logging
+from scraper_generator.utils import setup_logging
 from scraper_generator.generator import load_content_config
 
 # Load env vars and logging

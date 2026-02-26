@@ -28,7 +28,7 @@ from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
-from utils import setup_logging
+from scraper_generator.utils import setup_logging
 from scraper_generator.generator import load_content_config
 import logging
 

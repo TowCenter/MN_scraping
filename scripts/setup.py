@@ -15,7 +15,7 @@ from pymongo.errors import OperationFailure
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from utils import setup_logging
+from scraper_generator.utils import setup_logging
 from scraper_generator.generator import load_content_config
 
 # Set up logging to logs/db.log
@@ -44,10 +44,11 @@ url_field = next((f["name"] for f in fields if f.get("type") == "url"), "url")
 # --- Build dynamic content collection schema ---
 def _bson_type_for_field(field):
     t = field.get("type", "text")
+    required = field.get("required", False)
     if t == "date":
         return {"bsonType": ["date", "null"]}
     else:  # "text" or "url"
-        return {"bsonType": "string"}
+        return {"bsonType": "string"} if required else {"bsonType": ["string", "null"]}
 
 required_fields = ["org", "last_updated_at"] + [
     f["name"] for f in fields if f.get("required")
