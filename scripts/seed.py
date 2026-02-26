@@ -76,7 +76,7 @@ def main():
         valid_scrapers = [
             normalize_scraper_fields(s)
             for s in scrapers
-            if all(k in s for k in ("name", "path", "url"))
+            if all(k in s for k in ("path", "url"))
         ]
         org["scrapers"] = valid_scrapers
 

@@ -96,9 +96,8 @@ scrapers_schema = {
             "bsonType": "array",
             "items": {
                 "bsonType": "object",
-                "required": ["name", "path", "url"],
+                "required": ["path", "url"],
                 "properties": {
-                    "name": {"bsonType": "string"},
                     "path": {"bsonType": "string"},
                     "url":  {"bsonType": "string"}
                 },

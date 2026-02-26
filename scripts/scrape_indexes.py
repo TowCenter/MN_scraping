@@ -117,7 +117,6 @@ async def run():
         org_name = org.get("name")
         scrapers = org.get("scrapers", [])
         for mod_cfg in scrapers:
-            name = mod_cfg.get("name")
             path = mod_cfg.get("path")
             scraper_url = mod_cfg.get("url")
             active = mod_cfg.get("active", True)
@@ -131,10 +130,9 @@ async def run():
 
             if manual_force_export_requested:
                 logger.info(
-                    f"SCRAPER_INFO: manual_force_export was true for '{name}' ({org_name}); it will be reset to false in this run.",
+                    f"SCRAPER_INFO: manual_force_export was true for '{path}' ({org_name}); it will be reset to false in this run.",
                     extra={
                         "org": org_name,
-                        "scraper_name": name,
                         "scraper_url": scraper_url,
                         "path": path,
                     },
@@ -142,7 +140,7 @@ async def run():
 
             method_name = "get_all_articles" if use_all else "get_first_page"
 
-            logger.info(f"SCRAPER_START Running '{method_name}' for '{name}' for org '{org_name}'")
+            logger.info(f"SCRAPER_START Running '{method_name}' for '{path}' for org '{org_name}'")
 
             if active is False:
                 skip_status = mod_cfg.get("last_run_status")
@@ -161,14 +159,13 @@ async def run():
                     )
                 except PyMongoError as update_err:
                     logger.exception(
-                        f"SCRAPER_FINISH status=failed: DB error updating fields for skipped scraper '{name}': {update_err}",
-                        extra={"org": org_name, "scraper_name": name, "scraper_url": scraper_url, "method": method_name, "path": path, "error": update_err},
+                        f"SCRAPER_FINISH status=failed: DB error updating fields for skipped scraper '{path}': {update_err}",
+                        extra={"org": org_name, "scraper_url": scraper_url, "method": method_name, "path": path, "error": update_err},
                     )
                 logger.info(
-                    f"SCRAPER_FINISH status=skipped: Skipping inactive scraper '{name}' for org '{org_name}'",
+                    f"SCRAPER_FINISH status=skipped: Skipping inactive scraper '{path}' for org '{org_name}'",
                     extra={
                         "org": org_name,
-                        "scraper_name": name,
                         "scraper_url": scraper_url,
                         "method": method_name,
                         "path": path,
@@ -199,10 +196,10 @@ async def run():
                     update_scraper_run_fields(last_run_status="error", last_run_count=0)
                 except PyMongoError as update_err:
                     logger.exception(
-                        f"SCRAPER_FINISH status=failed: DB error updating last_run_status for scraper '{name}' after import failure: {update_err}",
-                        extra={"org": org_name, "scraper_name": name, "scraper_url": scraper_url, "method": method_name, "path": path, "error": update_err},
+                        f"SCRAPER_FINISH status=failed: DB error updating last_run_status for scraper '{path}' after import failure: {update_err}",
+                        extra={"org": org_name, "scraper_url": scraper_url, "method": method_name, "path": path, "error": update_err},
                     )
-                logger.exception(f"SCRAPER_FINISH status=failed: Failed to import module '{path}'. Error: {e}", extra={"org": org_name, "scraper_name": name, "scraper_url": scraper_url, "method": method_name, "path": path, "error": e})
+                logger.exception(f"SCRAPER_FINISH status=failed: Failed to import module '{path}'. Error: {e}", extra={"org": org_name, "scraper_url": scraper_url, "method": method_name, "path": path, "error": e})
                 continue
 
             # Execute the appropriate scraper function
@@ -223,10 +220,10 @@ async def run():
                     update_scraper_run_fields(last_run_status="error", last_run_count=0)
                 except PyMongoError as update_err:
                     logger.exception(
-                        f"SCRAPER_FINISH status=failed: DB error updating last_run_status for scraper '{name}' after runtime failure: {update_err}",
-                        extra={"org": org_name, "scraper_name": name, "scraper_url": scraper_url, "method": method_name, "path": path, "error": update_err},
+                        f"SCRAPER_FINISH status=failed: DB error updating last_run_status for scraper '{path}' after runtime failure: {update_err}",
+                        extra={"org": org_name, "scraper_url": scraper_url, "method": method_name, "path": path, "error": update_err},
                     )
-                logger.exception(f"SCRAPER_FINISH status=failed: Error running {method_name} for '{path}': {e}", extra={"org": org_name, "scraper_name": name, "scraper_url": scraper_url, "method": method_name, "path": path, "error": e})
+                logger.exception(f"SCRAPER_FINISH status=failed: Error running {method_name} for '{path}': {e}", extra={"org": org_name, "scraper_url": scraper_url, "method": method_name, "path": path, "error": e})
                 continue
 
             # Count for statistics
@@ -299,7 +296,6 @@ async def run():
                     f"SCRAPER_SUMMARY {path} ({scraper_url}): attempted={attempted_count}, inserted={inserted_count}, existing={existing_count}, failed={failed_count}",
                     extra={
                         "org": org_name,
-                        "scraper_name": name,
                         "scraper_url": scraper_url,
                         "method": method_name,
                         "path": path,
@@ -314,7 +310,6 @@ async def run():
                     f"SCRAPER_SUMMARY {path} ({scraper_url}): attempted={attempted_count}, inserted={inserted_count}, existing={existing_count}, failed={failed_count}",
                     extra={
                         "org": org_name,
-                        "scraper_name": name,
                         "scraper_url": scraper_url,
                         "method": method_name,
                         "path": path,
@@ -334,11 +329,11 @@ async def run():
                     last_run_count=inserted_count,
                 )
                 logger.info(
-                    f"SCRAPER_FINISH status=success: Successfully processed {inserted_count} articles for '{name}' ({org_name}); last_run_status={scraper_status}",
-                    extra={"org": org_name, "scraper_name": name, "scraper_url": scraper_url, "method": method_name, "path": path},
+                    f"SCRAPER_FINISH status=success: Successfully processed {inserted_count} articles for '{path}' ({org_name}); last_run_status={scraper_status}",
+                    extra={"org": org_name, "scraper_url": scraper_url, "method": method_name, "path": path},
                 )
             except PyMongoError as e:
-                logger.exception(f"SCRAPER_FINISH status=failed: DB error updating last_run for scraper '{name}': {e}", extra={"org": org_name, "scraper_name": name, "scraper_url": scraper_url, "method": method_name, "error": e})
+                logger.exception(f"SCRAPER_FINISH status=failed: DB error updating last_run for scraper '{path}': {e}", extra={"org": org_name, "scraper_url": scraper_url, "method": method_name, "error": e})
 
         # Update last_run timestamp for the org
         try:

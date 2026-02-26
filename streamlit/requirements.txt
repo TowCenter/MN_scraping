@@ -1,0 +1,7 @@
+streamlit
+pymongo
+pandas
+pytz
+tzlocal
+python-dotenv
+requests
