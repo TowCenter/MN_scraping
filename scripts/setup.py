@@ -2,11 +2,12 @@
 """
 MongoDB setup script for the `org_data` database.
 Creates/enforces JSON Schema validation and indexes for:
-- articles
-- events
-- orgs (with optional scrapers array)
+- <content_type> (from config.json)
+- <content_type>_scrapers (from config.json)
 """
 import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
 
@@ -15,6 +16,7 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 from utils import setup_logging
+from scraper_generator.generator import load_content_config
 
 # Set up logging to logs/db.log
 log_file = os.path.join(os.path.dirname(__file__), '..', 'logs', 'db.log')
@@ -30,42 +32,61 @@ if not MONGO_URI or not DB_NAME:
 client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
 db = client[DB_NAME]
 
-# --- articles collection schema & setup ---
-article_schema = {
-    "bsonType": "object",
-    "required": ["org", "title", "url", "content", "last_updated_at"],
-    "properties": {
-        "_id":             {"bsonType": "objectId"},
-        "org":          {"bsonType": "string"},
-        "title":           {"bsonType": "string"},
-        "url":             {"bsonType": "string"},
-        "date":            {"bsonType": [
-          "date",
-          "null"
-        ]}, # can be null, will be scraped after
-        "content":         {"bsonType": "string"},
-        "last_updated_at": {"bsonType": "date"}
-    },
-    "additionalProperties": True
+# --- Load content config ---
+content_config = load_content_config()
+content_col  = content_config["content_type"]                    # e.g. "articles"
+scrapers_col = content_config["content_type"] + "_scrapers"      # e.g. "articles_scrapers"
+fields       = content_config["fields"]
+
+# Find URL-type field for unique index (fallback to "url")
+url_field = next((f["name"] for f in fields if f.get("type") == "url"), "url")
+
+# --- Build dynamic content collection schema ---
+def _bson_type_for_field(field):
+    t = field.get("type", "text")
+    if t == "date":
+        return {"bsonType": ["date", "null"]}
+    else:  # "text" or "url"
+        return {"bsonType": "string"}
+
+required_fields = ["org", "last_updated_at"] + [
+    f["name"] for f in fields if f.get("required")
+]
+
+properties = {
+    "_id":            {"bsonType": "objectId"},
+    "org":            {"bsonType": "string"},
+    "content":        {"bsonType": "string"},
+    "last_updated_at": {"bsonType": "date"},
 }
+for field in fields:
+    properties[field["name"]] = _bson_type_for_field(field)
+
+content_schema = {
+    "bsonType": "object",
+    "required": required_fields,
+    "properties": properties,
+    "additionalProperties": True,
+}
+
 try:
     db.create_collection(
-        "articles",
-        validator={"$jsonSchema": article_schema},
+        content_col,
+        validator={"$jsonSchema": content_schema},
         validationLevel="strict"
     )
 except OperationFailure:
     db.command({
-        "collMod": "articles",
-        "validator": {"$jsonSchema": article_schema},
+        "collMod": content_col,
+        "validator": {"$jsonSchema": content_schema},
         "validationLevel": "strict"
     })
-# Unique index on url
-db.articles.create_index("url", unique=True)
+# Unique index on URL field
+db[content_col].create_index(url_field, unique=True)
 
-# --- orgs collection schema & setup ---
+# --- scrapers collection schema & setup ---
 # 'scrapers' is optional; if present, must be an array of objects
-org_schema = {
+scrapers_schema = {
     "bsonType": "object",
     "required": ["name"],
     "properties": {
@@ -90,18 +111,17 @@ org_schema = {
 }
 try:
     db.create_collection(
-        "orgs",
-        validator={"$jsonSchema": org_schema},
+        scrapers_col,
+        validator={"$jsonSchema": scrapers_schema},
         validationLevel="strict"
     )
 except OperationFailure:
     db.command({
-        "collMod": "orgs",
-        "validator": {"$jsonSchema": org_schema},
+        "collMod": scrapers_col,
+        "validator": {"$jsonSchema": scrapers_schema},
         "validationLevel": "strict"
     })
 # Unique index on name
-db.orgs.create_index("name", unique=True)
+db[scrapers_col].create_index("name", unique=True)
 
-logger.info("✅ MongoDB schema and indexes ensured.")
-# You can now use logger.info, logger.warning, etc. for any logging in this script.
+logger.info(f"✅ MongoDB schema and indexes ensured for '{content_col}' and '{scrapers_col}'.")

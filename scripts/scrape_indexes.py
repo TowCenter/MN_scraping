@@ -25,6 +25,7 @@ from pymongo.errors import PyMongoError
 from dateutil.parser import parse as parse_date, ParserError
 from utils import setup_logging
 from seed import main as run_seed
+from scraper_generator.generator import load_content_config
 
 # load environment vars from .env file
 from dotenv import load_dotenv
@@ -72,6 +73,14 @@ async def run():
     MONGO_URI = os.environ.get("MONGO_URI")
     DB_NAME = os.environ.get("DB_NAME")
 
+    # Load content config for dynamic collection/field names
+    content_config = load_content_config()
+    content_col  = content_config["content_type"]
+    scrapers_col = content_config["content_type"] + "_scrapers"
+    fields       = content_config["fields"]
+    url_field    = next((f["name"] for f in fields if f.get("type") == "url"), "url")
+    date_field   = next((f["name"] for f in fields if f.get("type") == "date"), None)
+
     # Ensure project root is in the path so scrapers can be imported
     script_dir = os.path.dirname(__file__)
     project_root = os.path.abspath(os.path.join(script_dir, os.pardir))
@@ -93,7 +102,7 @@ async def run():
     if org_name:
         query["name"] = org_name
 
-    cursor = db.orgs.find(query)
+    cursor = db[scrapers_col].find(query)
     orgs = list(cursor)
     if org_name:
         logger.info(f"Found {len(orgs)} org(s) matching name '{org_name}'.")
@@ -140,7 +149,7 @@ async def run():
                 if skip_status not in {"pass", "error", "unable_to_fetch"}:
                     skip_status = "unable_to_fetch"
                 try:
-                    db.orgs.update_one(
+                    db[scrapers_col].update_one(
                         {"_id": org.get("_id"), "scrapers.path": path},
                         {
                             "$set": {
@@ -169,7 +178,7 @@ async def run():
                 continue
 
             def update_scraper_run_fields(last_run_status, last_run_count=0):
-                db.orgs.update_one(
+                db[scrapers_col].update_one(
                     {"_id": org.get("_id"), "scrapers.path": path},
                     {
                         "$set": {
@@ -231,57 +240,58 @@ async def run():
                 ann.setdefault("org", org_name)
                 ann.setdefault("last_updated_at", datetime.now(timezone.utc))
 
-                # Convert date to datetime object if it's a string
-                date_val = ann.get("date")
-                if isinstance(date_val, str):
-                    try:
-                        parsed_date = parse_date(date_val)
-                        if parsed_date > datetime.now():
-                            logger.warning(f"INVALID DATE FOR ARTICLE: {ann.get('url')}: {date_val}", extra={"org": org_name, "error": "future_date"})
-                            ann["date"] = None
-                        else:
-                            ann["date"] = parsed_date
-                    except (ParserError, ValueError) as e:
-                        logger.warning(f"INVALID DATE FOR ARTICLE: {ann.get('url')}: {date_val}: {e}", extra={"org": org_name, "error": "bad_date"})
-                        ann["date"] = None
-                elif isinstance(date_val, datetime):
-                    if date_val > datetime.now():
-                        logger.warning(f"INVALID DATE FOR ARTICLE: {ann.get('url')}: {date_val}", extra={"org": org_name, "error": "future_date"})
-                        ann["date"] = None
-                elif date_val is not None:
-                    logger.warning(f"INVALID DATE FOR ARTICLE: {ann.get('url')}: {date_val}", extra={"org": org_name, "error": "bad_date"})
-                    ann["date"] = None
+                # Convert date field to datetime object if it's a string (only if config has a date field)
+                if date_field:
+                    date_val = ann.get(date_field)
+                    if isinstance(date_val, str):
+                        try:
+                            parsed_date = parse_date(date_val)
+                            if parsed_date > datetime.now():
+                                logger.warning(f"INVALID DATE FOR ARTICLE: {ann.get(url_field)}: {date_val}", extra={"org": org_name, "error": "future_date"})
+                                ann[date_field] = None
+                            else:
+                                ann[date_field] = parsed_date
+                        except (ParserError, ValueError) as e:
+                            logger.warning(f"INVALID DATE FOR ARTICLE: {ann.get(url_field)}: {date_val}: {e}", extra={"org": org_name, "error": "bad_date"})
+                            ann[date_field] = None
+                    elif isinstance(date_val, datetime):
+                        if date_val > datetime.now():
+                            logger.warning(f"INVALID DATE FOR ARTICLE: {ann.get(url_field)}: {date_val}", extra={"org": org_name, "error": "future_date"})
+                            ann[date_field] = None
+                    elif date_val is not None:
+                        logger.warning(f"INVALID DATE FOR ARTICLE: {ann.get(url_field)}: {date_val}", extra={"org": org_name, "error": "bad_date"})
+                        ann[date_field] = None
 
                 # Ensure content field exists
                 ann.setdefault("content", "")
 
                 try:
                     # Atomic "insert if not exists" operation
-                    result = db.articles.update_one(
-                        {"url": ann.get("url")},  # Query condition 
-                        {"$setOnInsert": ann},    # Only apply these changes if inserting
-                        upsert=True               # Create if not exists
+                    result = db[content_col].update_one(
+                        {url_field: ann.get(url_field)},  # Query condition
+                        {"$setOnInsert": ann},             # Only apply these changes if inserting
+                        upsert=True                        # Create if not exists
                     )
-                    
+
                     # Check if document was inserted (not updated)
                     if result.upserted_id:
                         inserted_count += 1
-                        logger.info(f"ARTICLE ADDED: {ann.get('url')}", extra={"org": org_name, "url": ann.get("url")})
-                        if ann.get("date"):
+                        logger.info(f"ARTICLE ADDED: {ann.get(url_field)}", extra={"org": org_name, "url": ann.get(url_field)})
+                        if date_field and ann.get(date_field):
                             logger.info(
-                                f"ART_METRIC PHASE=DATE RESULT=UPDATED SOURCE=INDEX URL=\"{ann.get('url')}\"",
+                                f"ART_METRIC PHASE=DATE RESULT=UPDATED SOURCE=INDEX URL=\"{ann.get(url_field)}\"",
                                 extra={
                                     "org": org_name,
-                                    "article_url": ann.get("url"),
+                                    "article_url": ann.get(url_field),
                                     "article_scraper": path,
                                 },
                             )
                     else:
-                        logger.info(f"ARTICLE SKIPPED: {ann.get('url')}", extra={"org": org_name, "url": ann.get("url")})
+                        logger.info(f"ARTICLE SKIPPED: {ann.get(url_field)}", extra={"org": org_name, "url": ann.get(url_field)})
 
                 except PyMongoError as e:
                     failed_count += 1
-                    logger.exception(f"ARTICLE FAILED TO ADD: {ann.get('url')}: {e}", extra={"org": org_name, "error": e})
+                    logger.exception(f"ARTICLE FAILED TO ADD: {ann.get(url_field)}: {e}", extra={"org": org_name, "error": e})
 
             existing_count = attempted_count - inserted_count - failed_count
             if attempted_count == 0:
@@ -332,7 +342,7 @@ async def run():
 
         # Update last_run timestamp for the org
         try:
-            db.orgs.update_one(
+            db[scrapers_col].update_one(
                 {"_id": org.get("_id")},
                 {"$set": {"last_run": datetime.now(timezone.utc)}}
             )

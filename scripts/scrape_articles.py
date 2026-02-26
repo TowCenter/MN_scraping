@@ -29,6 +29,7 @@ from pymongo.errors import PyMongoError
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 from utils import setup_logging
+from scraper_generator.generator import load_content_config
 import logging
 
 # Load environment vars from .env file
@@ -325,7 +326,7 @@ def extract_with_jina_ai(url):
     except Exception:
         return None
 
-async def process_article(article, collection, config, update_content=True, update_date=True, update_author=True, phase: str = "content"):
+async def process_article(article, collection, config, update_content=True, update_date=True, update_author=True, phase: str = "content", date_field: str = "date"):
     url = article.get("url")
     org = article.get("org", "unknown")
     scraper = article.get("scraper", "unknown")
@@ -457,7 +458,7 @@ async def process_article(article, collection, config, update_content=True, upda
     if update_content and content:
         update_fields["content"] = content
     if update_date and pub_date:
-        update_fields["date"] = pub_date
+        update_fields[date_field] = pub_date
     if update_author and author_str:
         update_fields["author"] = author_str
 
@@ -538,12 +539,12 @@ async def process_article(article, collection, config, update_content=True, upda
         },
     )
 
-async def process_article_wrapper(article, collection, config, semaphore, update_content=True, update_date=True, update_author=True, phase="content"):
+async def process_article_wrapper(article, collection, config, semaphore, update_content=True, update_date=True, update_author=True, phase="content", date_field="date"):
     async with semaphore:
         url = article.get("url")
         try:
             await asyncio.wait_for(
-                process_article(article, collection, config, update_content, update_date, update_author, phase),
+                process_article(article, collection, config, update_content, update_date, update_author, phase, date_field),
                 timeout=ARTICLE_TIMEOUT_SECONDS
             )
         except asyncio.TimeoutError:
@@ -583,7 +584,7 @@ async def process_missing_content_articles(collection, config, org_name=None, se
         ))
     await asyncio.gather(*tasks)
 
-async def process_missing_date_articles(collection, config, org_name=None, semaphore=None):
+async def process_missing_date_articles(collection, config, org_name=None, semaphore=None, date_field="date"):
     # Query for articles with missing date
     cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
     query = {
@@ -591,9 +592,9 @@ async def process_missing_date_articles(collection, config, org_name=None, semap
                     {"last_updated_at": {"$gte": cutoff_date}},
                     {
                         "$or": [
-                            {"date": {"$exists": False}},
-                            {"date": None},
-                            {"date": ""}
+                            {date_field: {"$exists": False}},
+                            {date_field: None},
+                            {date_field: ""}
                         ]
                     }
                 ]
@@ -610,7 +611,7 @@ async def process_missing_date_articles(collection, config, org_name=None, semap
     tasks = []
     for article in articles:
         tasks.append(process_article_wrapper(
-            article, collection, config, semaphore, update_content=False, update_date=True, update_author=False, phase="date"
+            article, collection, config, semaphore, update_content=False, update_date=True, update_author=False, phase="date", date_field=date_field
         ))
     await asyncio.gather(*tasks)
 
@@ -652,6 +653,12 @@ async def run():
     MONGO_URI = os.environ.get("MONGO_URI")
     DB_NAME = os.environ.get("DB_NAME")
 
+    # Load content config for dynamic collection/field names
+    content_config = load_content_config()
+    content_col = content_config["content_type"]
+    fields      = content_config["fields"]
+    date_field  = next((f["name"] for f in fields if f.get("type") == "date"), None)
+
     # Configure newspaper with browser headers
     user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
     config = Config()
@@ -667,7 +674,7 @@ async def run():
         sys.exit(1)
 
     db = client[DB_NAME]
-    collection = db["articles"]
+    collection = db[content_col]
 
     # Set concurrency limit (e.g., 10 tasks at a time)
     concurrency_limit = 10
@@ -677,8 +684,9 @@ async def run():
 
     # Process missing content articles
     await process_missing_content_articles(collection, config, org_name, semaphore)
-    # Process missing date articles
-    await process_missing_date_articles(collection, config, org_name, semaphore)
+    # Process missing date articles (only if config has a date-type field)
+    if date_field:
+        await process_missing_date_articles(collection, config, org_name, semaphore, date_field=date_field)
     # Process missing author articles
     await process_missing_author_articles(collection, config, org_name, semaphore)
 

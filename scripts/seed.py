@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from utils import setup_logging
+from scraper_generator.generator import load_content_config
 
 # Load env vars and logging
 load_dotenv(override=True)
@@ -52,6 +53,9 @@ def main():
         logger.error("MONGO_URI and DB_NAME must be set in .env")
         return
 
+    content_config = load_content_config()
+    scrapers_col = content_config["content_type"] + "_scrapers"
+
     orgs = collect_seed_data()
 
     try:
@@ -77,7 +81,7 @@ def main():
         org["scrapers"] = valid_scrapers
 
         try:
-            result = db.orgs.update_one(
+            result = db[scrapers_col].update_one(
                 {"name": org["name"]},
                 {"$set": org},
                 upsert=True
