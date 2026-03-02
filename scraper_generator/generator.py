@@ -223,9 +223,9 @@ def analyze_page_structure(url, config, logger=None, content_config=None):
     async def condense_dom(url):
         # scrape dom
         async with async_playwright() as p:
-            Stealth().hook_playwright_context(p)
             browser = await p.chromium.launch(headless=False)
             page = await browser.new_page()
+            await Stealth().apply_stealth_async(page)
 
             page.set_default_timeout(30000)
             page.set_default_navigation_timeout(30000)
