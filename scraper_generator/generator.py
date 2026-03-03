@@ -991,16 +991,21 @@ def generate_scraper(url, scraper_name, output_filename="scraper.py", content_co
             with open(page_analysis_path, 'r') as f:
                 saved_page_analysis = json.load(f)
 
-            scraper_code = refine_pagination(
-                scraper_code,
-                saved_page_analysis.get("next_page_selectors", []),
-                saved_page_analysis.get("next_page_examples", {}),
-                ctx.pagination_page_counts,
-                url, scraper_name, config, logger
-            )
-            _save_scraper(scraper_code)
-            print(f"📁 Refined scraper saved to: {scraper_file_path}")
-            logger.info(f"Pagination-refined scraper saved to: {scraper_file_path}")
+            next_page_selectors = saved_page_analysis.get("next_page_selectors", [])
+            if not next_page_selectors:
+                print("⚠️ No next-page selectors found during page analysis — skipping pagination refinement.")
+                logger.info("Skipping pagination refinement: no next_page_selectors in page analysis.")
+            else:
+                scraper_code = refine_pagination(
+                    scraper_code,
+                    next_page_selectors,
+                    saved_page_analysis.get("next_page_examples", {}),
+                    ctx.pagination_page_counts,
+                    url, scraper_name, config, logger
+                )
+                _save_scraper(scraper_code)
+                print(f"📁 Refined scraper saved to: {scraper_file_path}")
+                logger.info(f"Pagination-refined scraper saved to: {scraper_file_path}")
     else:
         print("\n⚠️ Skipping pagination test — first page still failing.")
         logger.info("Skipping pagination test — first page still failing.")
