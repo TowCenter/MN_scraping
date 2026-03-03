@@ -61,11 +61,13 @@ async def scrape_page(page):
     {% endfor %}{% if has_date_field %}# 3. Format date consistently using YYYY-MM-DD format
     {% endif %}# 4. Return structured data
 
-    # When adding an item, include the scraper path for traceability
-    # Example structure:
+    # REQUIRED: every item dict must include ALL of these keys:
+    # {% for field in fields %}'{{ field.name }}', {% endfor %}'scraper'
+    # 'scraper' must always be set to SCRAPER_MODULE_PATH (defined above).
+    # Example:
     # items.append({
     {% for field in fields %}#     '{{ field.name }}': {{ field.name }}_value,
-    {% endfor %}#     'scraper': SCRAPER_MODULE_PATH
+    {% endfor %}#     'scraper': SCRAPER_MODULE_PATH,  # <-- required, do not omit
     # })
 
     return items
