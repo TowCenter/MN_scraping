@@ -54,5 +54,6 @@ Your task is to analyze the HTML examples above and implement the scraper with i
 - Ensure scrapers don't break entirely because of malformed HTML or missing elements - use safe access patterns, especially if the item selector returns null or empty lists.
 - Be sure to understand child and parent HTML elements when selecting elements, since item containers should be parents of all the child field elements.
 - For optional fields, return None if the value is not found rather than raising an error.
+- **Use `text_content()` instead of `inner_text()` when reading text from elements that may be inside collapsed containers** (e.g. `<details>`, hidden divs). `inner_text()` returns empty for visually hidden elements; `text_content()` always returns the DOM text regardless of visibility.
 
 CRITICAL: Return ONLY the Python code with appropriate in-line comments and function docstrings. Do not include any explanations, descriptions, or markdown code blocks. Start your response directly with the Python imports and code. No introductory text, no ```python blocks, just the raw Python script that can be executed immediately.

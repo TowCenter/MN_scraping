@@ -812,6 +812,69 @@ def refine_pagination(original_code, next_page_selectors, next_page_examples,
     return clean_scraper_code(refined_code)
 
 
+def refine_missing_fields(original_code, missing_field_names, page_analysis,
+                          content_config, sample_results, url, scraper_name, config, logger=None):
+    """
+    Use LLM to fix scraper when required fields are returning null.
+
+    Args:
+        original_code (str): Current scraper code
+        missing_field_names (set): Field names that are null/blank across results
+        page_analysis (dict): Saved page_analysis.json with selectors and HTML examples
+        content_config (dict): Content config with field descriptions
+        sample_results (list): First few result records for context
+        url (str): Target URL
+        scraper_name (str): Name of scraper
+        config (dict): API config
+        logger: Logger instance
+
+    Returns:
+        str: Refined scraper code
+    """
+    prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
+    env = Environment(loader=FileSystemLoader(prompts_dir))
+    template = env.get_template("missing_fields_refinement_prompt.jinja2")
+
+    fields_config = content_config.get("fields", [])
+    missing_fields_info = [f for f in fields_config if f["name"] in missing_field_names]
+
+    field_selectors = {}
+    field_examples = {}
+    for fname in missing_field_names:
+        sels = page_analysis.get(f"{fname}_selectors", [])
+        exs = page_analysis.get(f"{fname}_examples", {})
+        if sels:
+            field_selectors[fname] = sels
+        if exs:
+            field_examples[fname] = exs
+
+    refinement_prompt = template.render(
+        original_code=original_code,
+        missing_fields=missing_fields_info,
+        field_selectors=json.dumps(field_selectors, indent=2),
+        field_examples=format_selectors_with_examples(field_examples),
+        sample_results=json.dumps(sample_results, indent=2),
+        url=url
+    )
+
+    client = OpenAI(api_key=config["api_key"])
+    print("🔧 Refining scraper to fix missing required fields...")
+    response = client.chat.completions.create(
+        model=config["model"],
+        messages=[
+            {"role": "system", "content": "You are an expert web scraper debugger. Fix scrapers that are returning null for required fields."},
+            {"role": "user", "content": refinement_prompt}
+        ],
+        reasoning_effort="medium",
+        max_completion_tokens=8000
+    )
+
+    refined_code = response.choices[0].message.content
+    if logger:
+        log_llm_interaction(logger, "Required Fields Refinement", refinement_prompt, refined_code, config["model"])
+    return clean_scraper_code(refined_code)
+
+
 # Main function to generate a scraper for a given URL with testing and refinement
 def generate_scraper(url, scraper_name, output_filename="scraper.py", content_config=None):
     if content_config is None:
@@ -1011,12 +1074,50 @@ def generate_scraper(url, scraper_name, output_filename="scraper.py", content_co
         logger.info("Skipping pagination test — first page still failing.")
 
     # -- Step 6: Validation tests (informational) -----------------------
+    # Fall back to first-page data if get_all_articles crashed before populating ctx.data
+    if not ctx.data and ctx.first_page_articles:
+        print("\n⚠️  get_all_articles failed but first-page data is available — using it for validation.")
+        logger.info("Step 6: falling back to first_page_articles for validation (get_all_articles failed).")
+        ctx.data = ctx.first_page_articles
+
+    nonblank_test = None
     if ctx.data:
         print("\n" + "="*60)
         print("STEP 6: DATA VALIDATION")
         print("="*60)
-        for test_cls in [ItemKeysTest, NonBlankValuesTest, DateFormatTest, UrlFormatTest]:
-            _run_test(test_cls, ctx)
+        _run_test(ItemKeysTest, ctx)
+        nonblank_test = _run_test(NonBlankValuesTest, ctx)
+        _run_test(DateFormatTest, ctx)
+        _run_test(UrlFormatTest, ctx)
+
+    # -- Step 7: Required fields refinement ----------------------------
+    if ctx.data and nonblank_test and not nonblank_test.passed:
+        missing_field_names = set()
+        for failure in nonblank_test.failures:
+            missing_field_names.update(failure.get("fields", set()))
+        missing_field_names.discard("scraper")
+
+        if missing_field_names:
+            print("\n" + "="*60)
+            print("STEP 7: REQUIRED FIELDS REFINEMENT")
+            print("="*60)
+            print(f"❌ Required fields returning null: {missing_field_names}")
+            logger.info(f"STEP 7: Refining for missing required fields: {missing_field_names}")
+
+            with open(page_analysis_path, 'r') as f:
+                saved_page_analysis = json.load(f)
+
+            scraper_code = refine_missing_fields(
+                scraper_code,
+                missing_field_names,
+                saved_page_analysis,
+                content_config,
+                ctx.data[:3],
+                url, scraper_name, config, logger
+            )
+            _save_scraper(scraper_code)
+            print(f"📁 Refined scraper saved to: {scraper_file_path}")
+            logger.info(f"Required-fields-refined scraper saved to: {scraper_file_path}")
 
     # -- Final: Full test suite summary -----------------------------------
     print("\n" + "="*60)
