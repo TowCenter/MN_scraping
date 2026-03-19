@@ -1,0 +1,38 @@
+{
+  "item_selectors": [
+    ".ultp-block-item"
+  ],
+  "next_page_selectors": [],
+  "item_examples": {
+    ".ultp-block-item": [
+      "<div class=\"ultp-block-item ultp-block-media post-id-165636\"><div class=\"ultp-block-content-wrap ultp-first-postlist-2\"><div class=\"ultp-block-image ultp-block-image-zoomIn\"><a href=\"https://minneapolisreview.com/who-from-city-of-minneapolis-area-former-high-school-standouts-will-be-active-on-saturday-march-7/\"><img alt=\"Paul Nathanson and Drew Dillon\" decoding=\"async\" src=\"https://d33ioocfz0fzi4.cloudfront.net/jns-media/ba/bf/27730144/webp_8ab95d13-261d-4ddf-98a6-dd20bba040f5.webp\" srcset=\"\"/></a><div class=\"ultp-category-img-grid\"><div class=\"ultp-category-grid ultp-category-classic ultp-category-bottomLeft\"><div class=\"ultp-category-in\"><a class=\"ultp-cat-sports\" href=\"https://minneapolisreview.com/category/sports/\">Sports</a></div></div></div></div><div class=\"ultp-block-content\"><h3 class=\"ultp-block-title\"><a href=\"https://minneapolisreview.com/who-from-city-of-minneapolis-area-former-high-school-standouts-will-be-active-on-saturday-march-7/\">Who from City of Minneapolis area\u2019s former high school standouts will be active on Saturday, March 7?</a></h3><div class=\"ultp-block-meta ultp-block-meta-verticalbar ultp-block-meta-noIcon\"></div><div class=\"ultp-block-excerpt\"><p>These ex-City of Minneapolis area high school standouts will participate in competitions on Saturday, March 7.</p>\n</div></div></div></div>"
+    ]
+  },
+  "next_page_examples": {},
+  "title_selectors": [
+    ".ultp-block-title",
+    ".ultp-block-title a"
+  ],
+  "title_examples": {
+    ".ultp-block-title": [
+      "<h3 class=\"ultp-block-title\"><a href=\"https://minneapolisreview.com/who-from-city-of-minneapolis-area-former-high-school-standouts-will-be-active-on-saturday-march-7/\">Who from City of Minneapolis area\u2019s former high school standouts will be active on Saturday, March 7?</a></h3>"
+    ],
+    ".ultp-block-title a": [
+      "<a href=\"https://minneapolisreview.com/who-from-city-of-minneapolis-area-former-high-school-standouts-will-be-active-on-saturday-march-7/\">Who from City of Minneapolis area\u2019s former high school standouts will be active on Saturday, March 7?</a>"
+    ]
+  },
+  "date_selectors": [],
+  "date_examples": {},
+  "url_selectors": [
+    ".ultp-block-title a",
+    ".ultp-block-item a"
+  ],
+  "url_examples": {
+    ".ultp-block-title a": [
+      "<a href=\"https://minneapolisreview.com/who-from-city-of-minneapolis-area-former-high-school-standouts-will-be-active-on-saturday-march-7/\">Who from City of Minneapolis area\u2019s former high school standouts will be active on Saturday, March 7?</a>"
+    ],
+    ".ultp-block-item a": [
+      "<a href=\"https://minneapolisreview.com/who-from-city-of-minneapolis-area-former-high-school-standouts-will-be-active-on-saturday-march-7/\"><img alt=\"Paul Nathanson and Drew Dillon\" decoding=\"async\" src=\"https://d33ioocfz0fzi4.cloudfront.net/jns-media/ba/bf/27730144/webp_8ab95d13-261d-4ddf-98a6-dd20bba040f5.webp\" srcset=\"\"/></a>"
+    ]
+  }
+}

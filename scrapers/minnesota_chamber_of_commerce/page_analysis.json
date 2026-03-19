@@ -1,0 +1,78 @@
+{
+  "item_selectors": [
+    ".mncc--article",
+    "ul.info-topics.mediaList li",
+    "article.node--type-article"
+  ],
+  "next_page_selectors": [
+    "ul.pager__items a[href*=\"?page=\"]",
+    "li.pager__item.pager__item--next a"
+  ],
+  "item_examples": {
+    ".mncc--article": [
+      "<article class=\"node node--type-article node--promoted node--view-mode-teaser clearfix mncc--article\" data-history-node-id=\"1233\">\n<div class=\"node__content clearfix\">\n<div class=\"article-hd\">\n<h2 class=\"node__title view-node-title\">\n<a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" rel=\"bookmark\"><span class=\"field field--name-title field--type-string field--label-hidden\">Key business issues are moving quickly at the Capitol</span>\n</a>\n</h2>\n<div class=\"node__meta\">\n<span class=\"node__meta\">\n                                                 Mar 14, 2026\n                                            </span>\n</div>\n</div>\n<div class=\"field field--name-field-image field--type-image field--label-hidden field__item\"> <a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" hreflang=\"en\"><img alt=\"capitol dome\" class=\"image-style-medium\" height=\"220\" loading=\"lazy\" src=\"/sites/default/files/styles/medium/public/2026-03/capitol%20dome%20good%20%282%29.jpg?itok=dbQeSFcm\" width=\"220\"/>\n</a>\n</div>\n<div class=\"node-body\">  One of the Chamber\u2019s top priorities this session is reinstating Minnesota\u2019s Pass-Through Entity tax, commonly known as the PTE tax at the Capitol. The proposal was heard in both the House and Senate this week. The PTE tax is a win-win policy that provides federal tax relief to more than 66,000 Minnesota businesses, primarily small to medium-sized companies, without costing the state any revenue. More than 30 states already offer a PTE tax, and without action, Minnesota risks falling further behind other states when competing for business investment.\n\n  <div class=\"more-link\"><a aria-label=\"Read more about Key business issues are moving quickly at the Capitol\" class=\"more-link\" href=\"/blog/key-business-issues-are-moving-quickly-capitol\" hreflang=\"en\">Read More</a></div>\n</div>\n</div>\n</article>"
+    ],
+    "ul.info-topics.mediaList li": [
+      "<li>\n<article class=\"node node--type-article node--promoted node--view-mode-teaser clearfix mncc--article\" data-history-node-id=\"1233\">\n<div class=\"node__content clearfix\">\n<div class=\"article-hd\">\n<h2 class=\"node__title view-node-title\">\n<a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" rel=\"bookmark\"><span class=\"field field--name-title field--type-string field--label-hidden\">Key business issues are moving quickly at the Capitol</span>\n</a>\n</h2>\n<div class=\"node__meta\">\n<span class=\"node__meta\">\n                                                 Mar 14, 2026\n                                            </span>\n</div>\n</div>\n<div class=\"field field--name-field-image field--type-image field--label-hidden field__item\"> <a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" hreflang=\"en\"><img alt=\"capitol dome\" class=\"image-style-medium\" height=\"220\" loading=\"lazy\" src=\"/sites/default/files/styles/medium/public/2026-03/capitol%20dome%20good%20%282%29.jpg?itok=dbQeSFcm\" width=\"220\"/>\n</a>\n</div>\n<div class=\"node-body\">  One of the Chamber\u2019s top priorities this session is reinstating Minnesota\u2019s Pass-Through Entity tax, commonly known as the PTE tax at the Capitol. The proposal was heard in both the House and Senate this week. The PTE tax is a win-win policy that provides federal tax relief to more than 66,000 Minnesota businesses, primarily small to medium-sized companies, without costing the state any revenue. More than 30 states already offer a PTE tax, and without action, Minnesota risks falling further behind other states when competing for business investment.\n\n  <div class=\"more-link\"><a aria-label=\"Read more about Key business issues are moving quickly at the Capitol\" class=\"more-link\" href=\"/blog/key-business-issues-are-moving-quickly-capitol\" hreflang=\"en\">Read More</a></div>\n</div>\n</div>\n</article>\n</li>"
+    ],
+    "article.node--type-article": [
+      "<article class=\"node node--type-article node--promoted node--view-mode-teaser clearfix mncc--article\" data-history-node-id=\"1233\">\n<div class=\"node__content clearfix\">\n<div class=\"article-hd\">\n<h2 class=\"node__title view-node-title\">\n<a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" rel=\"bookmark\"><span class=\"field field--name-title field--type-string field--label-hidden\">Key business issues are moving quickly at the Capitol</span>\n</a>\n</h2>\n<div class=\"node__meta\">\n<span class=\"node__meta\">\n                                                 Mar 14, 2026\n                                            </span>\n</div>\n</div>\n<div class=\"field field--name-field-image field--type-image field--label-hidden field__item\"> <a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" hreflang=\"en\"><img alt=\"capitol dome\" class=\"image-style-medium\" height=\"220\" loading=\"lazy\" src=\"/sites/default/files/styles/medium/public/2026-03/capitol%20dome%20good%20%282%29.jpg?itok=dbQeSFcm\" width=\"220\"/>\n</a>\n</div>\n<div class=\"node-body\">  One of the Chamber\u2019s top priorities this session is reinstating Minnesota\u2019s Pass-Through Entity tax, commonly known as the PTE tax at the Capitol. The proposal was heard in both the House and Senate this week. The PTE tax is a win-win policy that provides federal tax relief to more than 66,000 Minnesota businesses, primarily small to medium-sized companies, without costing the state any revenue. More than 30 states already offer a PTE tax, and without action, Minnesota risks falling further behind other states when competing for business investment.\n\n  <div class=\"more-link\"><a aria-label=\"Read more about Key business issues are moving quickly at the Capitol\" class=\"more-link\" href=\"/blog/key-business-issues-are-moving-quickly-capitol\" hreflang=\"en\">Read More</a></div>\n</div>\n</div>\n</article>"
+    ]
+  },
+  "next_page_examples": {
+    "ul.pager__items a[href*=\"?page=\"]": [
+      "<a aria-current=\"page\" href=\"?page=0\" title=\"Current page\">\n<span class=\"visually-hidden\">\n              Current page\n            </span>1</a>"
+    ],
+    "li.pager__item.pager__item--next a": [
+      "<a href=\"?page=1\" rel=\"next\" title=\"Go to next page\">\n<span class=\"visually-hidden\">Next page</span>\n<span aria-hidden=\"true\">Next \u203a</span>\n</a>"
+    ]
+  },
+  "title_selectors": [
+    "h2.node__title",
+    "h2.node__title.view-node-title",
+    "h2.node__title a"
+  ],
+  "title_examples": {
+    "h2.node__title": [
+      "<h2 class=\"node__title view-node-title\">\n<a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" rel=\"bookmark\"><span class=\"field field--name-title field--type-string field--label-hidden\">Key business issues are moving quickly at the Capitol</span>\n</a>\n</h2>"
+    ],
+    "h2.node__title.view-node-title": [
+      "<h2 class=\"node__title view-node-title\">\n<a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" rel=\"bookmark\"><span class=\"field field--name-title field--type-string field--label-hidden\">Key business issues are moving quickly at the Capitol</span>\n</a>\n</h2>"
+    ],
+    "h2.node__title a": [
+      "<a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" rel=\"bookmark\"><span class=\"field field--name-title field--type-string field--label-hidden\">Key business issues are moving quickly at the Capitol</span>\n</a>"
+    ]
+  },
+  "date_selectors": [
+    ".node__meta",
+    "div.node__meta",
+    "span.node__meta"
+  ],
+  "date_examples": {
+    ".node__meta": [
+      "<div class=\"node__meta\">\n<span class=\"node__meta\">\n                                                 Mar 14, 2026\n                                            </span>\n</div>"
+    ],
+    "div.node__meta": [
+      "<div class=\"node__meta\">\n<span class=\"node__meta\">\n                                                 Mar 14, 2026\n                                            </span>\n</div>"
+    ],
+    "span.node__meta": [
+      "<span class=\"node__meta\">\n                                                 Mar 14, 2026\n                                            </span>"
+    ]
+  },
+  "url_selectors": [
+    "a.more-link",
+    "article.node--type-article a[href^=\"/blog/\"]",
+    "h2.node__title a"
+  ],
+  "url_examples": {
+    "a.more-link": [
+      "<a aria-label=\"Read more about Key business issues are moving quickly at the Capitol\" class=\"more-link\" href=\"/blog/key-business-issues-are-moving-quickly-capitol\" hreflang=\"en\">Read More</a>"
+    ],
+    "article.node--type-article a[href^=\"/blog/\"]": [
+      "<a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" rel=\"bookmark\"><span class=\"field field--name-title field--type-string field--label-hidden\">Key business issues are moving quickly at the Capitol</span>\n</a>"
+    ],
+    "h2.node__title a": [
+      "<a href=\"/blog/key-business-issues-are-moving-quickly-capitol\" rel=\"bookmark\"><span class=\"field field--name-title field--type-string field--label-hidden\">Key business issues are moving quickly at the Capitol</span>\n</a>"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+    "name": "Minneapolis Public Schools",
+    "scrapers": [
+        {
+            "path": "scrapers.minneapolis_public_schools.scraper",
+            "url": "https://www.mpschools.org/about-mps/news"
+        }
+    ]
+}

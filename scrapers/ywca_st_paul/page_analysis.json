@@ -1,0 +1,66 @@
+{
+  "item_selectors": [
+    "div.elementor-post__card",
+    "div.elementor-posts-container article",
+    "article.elementor-post"
+  ],
+  "next_page_selectors": [
+    "nav.elementor-pagination a.page-numbers",
+    "a.page-numbers.next"
+  ],
+  "item_examples": {
+    "div.elementor-post__card": [
+      "<div class=\"elementor-post__card\">\n<a class=\"elementor-post__thumbnail__link\" href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\" tabindex=\"-1\"><div class=\"elementor-post__thumbnail\"><img alt=\"\" class=\"attachment-full size-full wp-image-14879\" decoding=\"async\" height=\"1294\" sizes=\"(max-width: 1000px) 100vw, 1000px\" src=\"https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1.jpg\" srcset=\"https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1.jpg 1000w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-232x300.jpg 232w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-791x1024.jpg 791w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-768x994.jpg 768w\" width=\"1000\"/></div></a>\n<div class=\"elementor-post__badge\">Uncategorized</div>\n<div class=\"elementor-post__text\">\n<h3 class=\"elementor-post__title\">\n<a href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\">\n\t\t\t\tRibbon Cutting &amp; Open House Celebration\t\t\t</a>\n</h3>\n<div class=\"elementor-post__excerpt\">\n<p>February 28, 2026<br/>\nJoin us for a Ribbon Cutting and Open House celebrating Pathways Life &amp; Health\u2019s new youth programming space at YWCA St. Paul. After a brief ceremony, guests can explore the center through hands-on activities, tour key program areas, meet staff and partners, and enjoy light refreshments as we celebrate a new chapter of youth empowerment.</p>\n</div>\n<a aria-label=\"Read more about Ribbon Cutting &amp; Open House Celebration\" class=\"elementor-post__read-more\" href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\" tabindex=\"-1\">\n\t\t\tRead More \u00bb\t\t</a>\n</div>\n<div class=\"elementor-post__meta-data\">\n<span class=\"elementor-post-date\">\n\t\t\tFebruary 5, 2026\t\t</span>\n</div>\n</div>"
+    ],
+    "div.elementor-posts-container article": [
+      "<article class=\"elementor-post elementor-grid-item post-14877 post type-post status-publish format-standard has-post-thumbnail hentry category-uncategorized wpbf-post\" role=\"listitem\">\n<div class=\"elementor-post__card\">\n<a class=\"elementor-post__thumbnail__link\" href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\" tabindex=\"-1\"><div class=\"elementor-post__thumbnail\"><img alt=\"\" class=\"attachment-full size-full wp-image-14879\" decoding=\"async\" height=\"1294\" sizes=\"(max-width: 1000px) 100vw, 1000px\" src=\"https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1.jpg\" srcset=\"https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1.jpg 1000w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-232x300.jpg 232w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-791x1024.jpg 791w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-768x994.jpg 768w\" width=\"1000\"/></div></a>\n<div class=\"elementor-post__badge\">Uncategorized</div>\n<div class=\"elementor-post__text\">\n<h3 class=\"elementor-post__title\">\n<a href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\">\n\t\t\t\tRibbon Cutting &amp; Open House Celebration\t\t\t</a>\n</h3>\n<div class=\"elementor-post__excerpt\">\n<p>February 28, 2026<br/>\nJoin us for a Ribbon Cutting and Open House celebrating Pathways Life &amp; Health\u2019s new youth programming space at YWCA St. Paul. After a brief ceremony, guests can explore the center through hands-on activities, tour key program areas, meet staff and partners, and enjoy light refreshments as we celebrate a new chapter of youth empowerment.</p>\n</div>\n<a aria-label=\"Read more about Ribbon Cutting &amp; Open House Celebration\" class=\"elementor-post__read-more\" href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\" tabindex=\"-1\">\n\t\t\tRead More \u00bb\t\t</a>\n</div>\n<div class=\"elementor-post__meta-data\">\n<span class=\"elementor-post-date\">\n\t\t\tFebruar..."
+    ],
+    "article.elementor-post": [
+      "<article class=\"elementor-post elementor-grid-item post-14877 post type-post status-publish format-standard has-post-thumbnail hentry category-uncategorized wpbf-post\" role=\"listitem\">\n<div class=\"elementor-post__card\">\n<a class=\"elementor-post__thumbnail__link\" href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\" tabindex=\"-1\"><div class=\"elementor-post__thumbnail\"><img alt=\"\" class=\"attachment-full size-full wp-image-14879\" decoding=\"async\" height=\"1294\" sizes=\"(max-width: 1000px) 100vw, 1000px\" src=\"https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1.jpg\" srcset=\"https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1.jpg 1000w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-232x300.jpg 232w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-791x1024.jpg 791w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-768x994.jpg 768w\" width=\"1000\"/></div></a>\n<div class=\"elementor-post__badge\">Uncategorized</div>\n<div class=\"elementor-post__text\">\n<h3 class=\"elementor-post__title\">\n<a href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\">\n\t\t\t\tRibbon Cutting &amp; Open House Celebration\t\t\t</a>\n</h3>\n<div class=\"elementor-post__excerpt\">\n<p>February 28, 2026<br/>\nJoin us for a Ribbon Cutting and Open House celebrating Pathways Life &amp; Health\u2019s new youth programming space at YWCA St. Paul. After a brief ceremony, guests can explore the center through hands-on activities, tour key program areas, meet staff and partners, and enjoy light refreshments as we celebrate a new chapter of youth empowerment.</p>\n</div>\n<a aria-label=\"Read more about Ribbon Cutting &amp; Open House Celebration\" class=\"elementor-post__read-more\" href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\" tabindex=\"-1\">\n\t\t\tRead More \u00bb\t\t</a>\n</div>\n<div class=\"elementor-post__meta-data\">\n<span class=\"elementor-post-date\">\n\t\t\tFebruar..."
+    ]
+  },
+  "next_page_examples": {
+    "nav.elementor-pagination a.page-numbers": [
+      "<a class=\"page-numbers\" href=\"https://www.ywcastpaul.org/blog/page/2/\"><span class=\"elementor-screen-only\">Page</span>2</a>"
+    ],
+    "a.page-numbers.next": [
+      "<a class=\"page-numbers next\" href=\"https://www.ywcastpaul.org/blog/page/2/\">Next \u00bb</a>"
+    ]
+  },
+  "title_selectors": [
+    "h3.elementor-post__title a",
+    "h3.elementor-post__title"
+  ],
+  "title_examples": {
+    "h3.elementor-post__title a": [
+      "<a href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\">\n\t\t\t\tRibbon Cutting &amp; Open House Celebration\t\t\t</a>"
+    ],
+    "h3.elementor-post__title": [
+      "<h3 class=\"elementor-post__title\">\n<a href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\">\n\t\t\t\tRibbon Cutting &amp; Open House Celebration\t\t\t</a>\n</h3>"
+    ]
+  },
+  "date_selectors": [
+    "div.elementor-post__meta-data span.elementor-post-date",
+    "span.elementor-post-date"
+  ],
+  "date_examples": {
+    "div.elementor-post__meta-data span.elementor-post-date": [
+      "<span class=\"elementor-post-date\">\n\t\t\tFebruary 5, 2026\t\t</span>"
+    ],
+    "span.elementor-post-date": [
+      "<span class=\"elementor-post-date\">\n\t\t\tFebruary 5, 2026\t\t</span>"
+    ]
+  },
+  "url_selectors": [
+    "h3.elementor-post__title a",
+    "a.elementor-post__thumbnail__link"
+  ],
+  "url_examples": {
+    "h3.elementor-post__title a": [
+      "<a href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\">\n\t\t\t\tRibbon Cutting &amp; Open House Celebration\t\t\t</a>"
+    ],
+    "a.elementor-post__thumbnail__link": [
+      "<a class=\"elementor-post__thumbnail__link\" href=\"https://www.ywcastpaul.org/ribbon-cutting-open-house-celebration/\" tabindex=\"-1\"><div class=\"elementor-post__thumbnail\"><img alt=\"\" class=\"attachment-full size-full wp-image-14879\" decoding=\"async\" height=\"1294\" sizes=\"(max-width: 1000px) 100vw, 1000px\" src=\"https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1.jpg\" srcset=\"https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1.jpg 1000w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-232x300.jpg 232w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-791x1024.jpg 791w, https://www.ywcastpaul.org/wp-content/uploads/2026/02/Open-House-Flyer-2-1-768x994.jpg 768w\" width=\"1000\"/></div></a>"
+    ]
+  }
+}

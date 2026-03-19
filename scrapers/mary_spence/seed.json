@@ -1,0 +1,9 @@
+{
+    "name": "Mary Spence",
+    "scrapers": [
+        {
+            "path": "scrapers.mary_spence.scraper",
+            "url": "https://maryspence.org/news-events/"
+        }
+    ]
+}

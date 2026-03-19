@@ -1,0 +1,9 @@
+{
+    "name": "St Paul Area Chamber of Commerce",
+    "scrapers": [
+        {
+            "path": "scrapers.st_paul_area_chamber_of_commerce.scraper",
+            "url": "https://www.stpaulchamber.com/blog"
+        }
+    ]
+}

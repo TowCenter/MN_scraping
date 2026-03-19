@@ -1,0 +1,9 @@
+{
+    "name": "West Twin Cities",
+    "scrapers": [
+        {
+            "path": "scrapers.west_twin_cities.scraper",
+            "url": "https://westtwincities.com/category/local-government/"
+        }
+    ]
+}

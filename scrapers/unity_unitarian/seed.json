@@ -1,0 +1,9 @@
+{
+    "name": "Unity Unitarian",
+    "scrapers": [
+        {
+            "path": "scrapers.unity_unitarian.scraper",
+            "url": "https://www.unityunitarian.org/beloved-community-news/category/all"
+        }
+    ]
+}

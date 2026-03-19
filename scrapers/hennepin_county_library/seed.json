@@ -1,0 +1,9 @@
+{
+    "name": "Hennepin County Library",
+    "scrapers": [
+        {
+            "path": "scrapers.hennepin_county_library.scraper",
+            "url": "https://www.hclib.org/about/news"
+        }
+    ]
+}

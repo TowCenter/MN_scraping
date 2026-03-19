@@ -1,0 +1,9 @@
+{
+    "name": "NW Twin Cities",
+    "scrapers": [
+        {
+            "path": "scrapers.nw_twin_cities.scraper",
+            "url": "https://nwtwincities.com/category/local-government/"
+        }
+    ]
+}

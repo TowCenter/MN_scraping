@@ -1,0 +1,9 @@
+{
+    "name": "SE Twin Cities",
+    "scrapers": [
+        {
+            "path": "scrapers.se_twin_cities.scraper",
+            "url": "https://setwincities.com/category/local-government/"
+        }
+    ]
+}

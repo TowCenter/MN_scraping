@@ -1,0 +1,9 @@
+{
+    "name": "Minnesota Chamber of Commerce",
+    "scrapers": [
+        {
+            "path": "scrapers.minnesota_chamber_of_commerce.scraper",
+            "url": "https://www.mnchamber.com/minnsights-blog"
+        }
+    ]
+}

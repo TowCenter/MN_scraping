@@ -1,0 +1,9 @@
+{
+    "name": "Minnesota Council of Churches",
+    "scrapers": [
+        {
+            "path": "scrapers.minnesota_council_of_churches.scraper",
+            "url": "https://www.mnchurches.org/news"
+        }
+    ]
+}

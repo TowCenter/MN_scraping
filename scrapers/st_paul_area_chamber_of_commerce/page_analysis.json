@@ -1,0 +1,52 @@
+{
+  "item_selectors": [
+    "table#blogTable tr",
+    "div.blog-post"
+  ],
+  "next_page_selectors": [],
+  "item_examples": {
+    "table#blogTable tr": [
+      "<tr>\n<td valign=\"top\">\n<div class=\"blog-body\" id=\"582072366771845142-blog\" style=\"float: left;\">\n<div id=\"wsite-content\"> <div class=\"blog-post\" id=\"blog-post-134830245934516195\">\n<div class=\"blog-header\">\n<h2 class=\"blog-title\">\n<a class=\"blog-title-link blog-link\" href=\"//www.stpaulchamber.com/blog/march-mavericks-unshakable-strength-in-every-season\">March Mavericks: Unshakable\u00a0-\u00a0Strength in Every Season</a>\n</h2>\n<p class=\"blog-date\">\n<span class=\"date-text\">\n\t\t3/17/2026\n\t</span>\n</p>\n<p class=\"blog-comments\">\n<a class=\"blog-link\" href=\"//www.stpaulchamber.com/blog/march-mavericks-unshakable-strength-in-every-season#comments\">\n\t\t0 Comments\n\t</a>\n</p>\n</div>\n<div class=\"blog-separator\">\u00a0</div>\n<div class=\"blog-content\">\n<span class=\"imgPusher\" style=\"float:left;height:0px\"></span><span style=\"display: table;width:270px;position:relative;float:left;max-width:100%;;clear:left;margin-top:0px;*margin-top:0px\"><a><img alt=\"Picture\" class=\"galleryImageBorder wsite-image\" src=\"/uploads/1/3/4/9/134978147/published/b-blog1.png?1773854566\" style=\"margin-top: 5px; margin-bottom: 10px; margin-left: 0px; margin-right: 10px; border-width:1px;padding:3px; max-width:100%\"/></a><span class=\"wsite-caption\" style=\"display: table-caption; caption-side: bottom; font-size: 90%; margin-top: -10px; margin-bottom: 10px; text-align: center;\"></span></span> <div class=\"paragraph\" style=\"display:block;\"><span>Last week we honored Women\u2019s History Month with our annual March Mavericks luncheon, Presented by Wells Fargo, centered on this year\u2019s theme: \u201cUnshakable: Strength in Every Season.\u201d \u00a0We were hosted at St. Catherine University, and the event featured an exceptional panel moderated by Emmy Award-winning broadcaster and former professional athlete <strong>Lea B. Olsen. </strong>Panelists included entrepreneur and CEO <strong>Larissa Loden</strong>; Greater MSP Enterprise Director <strong>Ieesha McKinzie Collins</strong>; and Minnesota Vikings EVP/Chief Legal Officer <strong>Karin Nelsen</s..."
+    ],
+    "div.blog-post": [
+      "<div class=\"blog-post\" id=\"blog-post-134830245934516195\">\n<div class=\"blog-header\">\n<h2 class=\"blog-title\">\n<a class=\"blog-title-link blog-link\" href=\"//www.stpaulchamber.com/blog/march-mavericks-unshakable-strength-in-every-season\">March Mavericks: Unshakable\u00a0-\u00a0Strength in Every Season</a>\n</h2>\n<p class=\"blog-date\">\n<span class=\"date-text\">\n\t\t3/17/2026\n\t</span>\n</p>\n<p class=\"blog-comments\">\n<a class=\"blog-link\" href=\"//www.stpaulchamber.com/blog/march-mavericks-unshakable-strength-in-every-season#comments\">\n\t\t0 Comments\n\t</a>\n</p>\n</div>\n<div class=\"blog-separator\">\u00a0</div>\n<div class=\"blog-content\">\n<span class=\"imgPusher\" style=\"float:left;height:0px\"></span><span style=\"display: table;width:270px;position:relative;float:left;max-width:100%;;clear:left;margin-top:0px;*margin-top:0px\"><a><img alt=\"Picture\" class=\"galleryImageBorder wsite-image\" src=\"/uploads/1/3/4/9/134978147/published/b-blog1.png?1773854566\" style=\"margin-top: 5px; margin-bottom: 10px; margin-left: 0px; margin-right: 10px; border-width:1px;padding:3px; max-width:100%\"/></a><span class=\"wsite-caption\" style=\"display: table-caption; caption-side: bottom; font-size: 90%; margin-top: -10px; margin-bottom: 10px; text-align: center;\"></span></span> <div class=\"paragraph\" style=\"display:block;\"><span>Last week we honored Women\u2019s History Month with our annual March Mavericks luncheon, Presented by Wells Fargo, centered on this year\u2019s theme: \u201cUnshakable: Strength in Every Season.\u201d \u00a0We were hosted at St. Catherine University, and the event featured an exceptional panel moderated by Emmy Award-winning broadcaster and former professional athlete <strong>Lea B. Olsen. </strong>Panelists included entrepreneur and CEO <strong>Larissa Loden</strong>; Greater MSP Enterprise Director <strong>Ieesha McKinzie Collins</strong>; and Minnesota Vikings EVP/Chief Legal Officer <strong>Karin Nelsen</strong>.\u00a0 </span>\u200b<br/><br/><span>We also were proud to recognize <strong><a href=\"https://goffpublic.com\" target=\"_blank\">..."
+    ]
+  },
+  "next_page_examples": {},
+  "title_selectors": [
+    "h2.blog-title",
+    "a.blog-title-link"
+  ],
+  "title_examples": {
+    "h2.blog-title": [
+      "<h2 class=\"blog-title\">\n<a class=\"blog-title-link blog-link\" href=\"//www.stpaulchamber.com/blog/march-mavericks-unshakable-strength-in-every-season\">March Mavericks: Unshakable\u00a0-\u00a0Strength in Every Season</a>\n</h2>"
+    ],
+    "a.blog-title-link": [
+      "<a class=\"blog-title-link blog-link\" href=\"//www.stpaulchamber.com/blog/march-mavericks-unshakable-strength-in-every-season\">March Mavericks: Unshakable\u00a0-\u00a0Strength in Every Season</a>"
+    ]
+  },
+  "date_selectors": [
+    "p.blog-date",
+    "span.date-text"
+  ],
+  "date_examples": {
+    "p.blog-date": [
+      "<p class=\"blog-date\">\n<span class=\"date-text\">\n\t\t3/17/2026\n\t</span>\n</p>"
+    ],
+    "span.date-text": [
+      "<span class=\"date-text\">\n\t\t3/17/2026\n\t</span>"
+    ]
+  },
+  "url_selectors": [
+    "h2.blog-title a",
+    "a.blog-title-link"
+  ],
+  "url_examples": {
+    "h2.blog-title a": [
+      "<a class=\"blog-title-link blog-link\" href=\"//www.stpaulchamber.com/blog/march-mavericks-unshakable-strength-in-every-season\">March Mavericks: Unshakable\u00a0-\u00a0Strength in Every Season</a>"
+    ],
+    "a.blog-title-link": [
+      "<a class=\"blog-title-link blog-link\" href=\"//www.stpaulchamber.com/blog/march-mavericks-unshakable-strength-in-every-season\">March Mavericks: Unshakable\u00a0-\u00a0Strength in Every Season</a>"
+    ]
+  }
+}

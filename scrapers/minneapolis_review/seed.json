@@ -1,0 +1,9 @@
+{
+    "name": "Minneapolis Review",
+    "scrapers": [
+        {
+            "path": "scrapers.minneapolis_review.scraper",
+            "url": "https://minneapolisreview.com/"
+        }
+    ]
+}

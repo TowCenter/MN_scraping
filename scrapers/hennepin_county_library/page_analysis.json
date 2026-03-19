@@ -1,0 +1,52 @@
+{
+  "item_selectors": [
+    "div.listing.feed-listing",
+    "div.listing__content"
+  ],
+  "next_page_selectors": [
+    "li.pagination__next a",
+    "ul.pagination a.pager"
+  ],
+  "item_examples": {
+    "div.listing.feed-listing": [
+      "<div class=\"listing feed-listing page1\" style=\"display: block;\">\n<div class=\"listing__content\">\n<p class=\"news-date h4\">\n<asp:literal id=\"litDisplayDate\" runat=\"server\"></asp:literal>\n</p>\n<h3 class=\"h3\">\n<a href=\"/about/news/2026/February/mhl-sotn-voting-2026\">\n                                        Maud Hart Lovelace and Star of the North Picture Book Awards\n                                    </a>\n</h3>\n<p>From March 1-March 21, children are invited to vote online for two book awards: Star of the North and Maud Hart Lovelace. </p>\n<p class=\"news-category\">\n<span class=\"h4\">Category:</span>\n<a href=\"?type=Events\">Events</a>\n</p>\n</div>\n</div>"
+    ],
+    "div.listing__content": [
+      "<div class=\"listing__content\">\n<p class=\"news-date h4\">\n<asp:literal id=\"litDisplayDate\" runat=\"server\"></asp:literal>\n</p>\n<h3 class=\"h3\">\n<a href=\"/about/news/2026/February/mhl-sotn-voting-2026\">\n                                        Maud Hart Lovelace and Star of the North Picture Book Awards\n                                    </a>\n</h3>\n<p>From March 1-March 21, children are invited to vote online for two book awards: Star of the North and Maud Hart Lovelace. </p>\n<p class=\"news-category\">\n<span class=\"h4\">Category:</span>\n<a href=\"?type=Events\">Events</a>\n</p>\n</div>"
+    ]
+  },
+  "next_page_examples": {
+    "li.pagination__next a": [
+      "<a href=\"#\">Next</a>"
+    ],
+    "ul.pagination a.pager": [
+      "<a class=\"pager\">1</a>"
+    ]
+  },
+  "title_selectors": [
+    "div.listing.feed-listing h3.h3 a",
+    "div.listing__content h3.h3 a"
+  ],
+  "title_examples": {
+    "div.listing.feed-listing h3.h3 a": [
+      "<a href=\"/about/news/2026/February/mhl-sotn-voting-2026\">\n                                        Maud Hart Lovelace and Star of the North Picture Book Awards\n                                    </a>"
+    ],
+    "div.listing__content h3.h3 a": [
+      "<a href=\"/about/news/2026/February/mhl-sotn-voting-2026\">\n                                        Maud Hart Lovelace and Star of the North Picture Book Awards\n                                    </a>"
+    ]
+  },
+  "date_selectors": [],
+  "date_examples": {},
+  "url_selectors": [
+    "div.listing.feed-listing a[href]",
+    "div.listing__content h3.h3 a[href]"
+  ],
+  "url_examples": {
+    "div.listing.feed-listing a[href]": [
+      "<a href=\"/about/news/2026/February/mhl-sotn-voting-2026\">\n                                        Maud Hart Lovelace and Star of the North Picture Book Awards\n                                    </a>"
+    ],
+    "div.listing__content h3.h3 a[href]": [
+      "<a href=\"/about/news/2026/February/mhl-sotn-voting-2026\">\n                                        Maud Hart Lovelace and Star of the North Picture Book Awards\n                                    </a>"
+    ]
+  }
+}

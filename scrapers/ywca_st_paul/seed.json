@@ -1,0 +1,9 @@
+{
+    "name": "YWCA St Paul",
+    "scrapers": [
+        {
+            "path": "scrapers.ywca_st_paul.scraper",
+            "url": "https://www.ywcastpaul.org/blog/"
+        }
+    ]
+}

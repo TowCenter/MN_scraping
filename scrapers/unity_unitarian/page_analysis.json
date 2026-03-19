@@ -1,0 +1,58 @@
+{
+  "item_selectors": [
+    "table#blogTable tr",
+    "div.blog-post"
+  ],
+  "next_page_selectors": [
+    "div.blog-page-nav-previous a"
+  ],
+  "item_examples": {
+    "table#blogTable tr": [
+      "<tr>\n<td valign=\"top\">\n<div class=\"blog-body\" id=\"761452156171659152-blog\" style=\"float: left;\">\n<div id=\"wsite-content\"> <div class=\"blog-post\" id=\"blog-post-979711674394308490\">\n<div class=\"blog-header\">\n<h2 class=\"blog-title\">\n<a class=\"blog-title-link blog-link\" href=\"//www.unityunitarian.org/beloved-community-news/racialized-capitalism-means-racialized-immigration-enforcement\">Racialized Capitalism Means Racialized Immigration \"Enforcement\"</a>\n</h2>\n<p class=\"blog-date\">\n<span class=\"date-text\">\n\t\t2/20/2026\n\t</span>\n</p>\n<p class=\"blog-comments\">\n<a class=\"blog-link\" href=\"//www.unityunitarian.org/beloved-community-news/racialized-capitalism-means-racialized-immigration-enforcement#comments\">comments</a>\n</p>\n</div>\n<div class=\"blog-separator\">\u00a0</div>\n<div class=\"blog-content\">\n<div class=\"paragraph\"><strong>Justin Cummins, Guest Writer for the Beloved Community Communications Team</strong></div> <span class=\"imgPusher\" style=\"float:left;height:0px\"></span><span style=\"display: table;width:auto;position:relative;float:left;max-width:100%;;clear:left;margin-top:0px;*margin-top:0px\"><a><img alt=\"Justin Cummins\" class=\"galleryImageBorder wsite-image\" src=\"/uploads/6/1/0/3/6103699/published/justin-cummins-2026.jpg?1771620514\" style=\"margin-top: 0px; margin-bottom: 10px; margin-left: 0px; margin-right: 10px; border-width:0; max-width:100%\"/></a><span class=\"wsite-caption\" style=\"display: table-caption; caption-side: bottom; font-size: 90%; margin-top: -10px; margin-bottom: 10px; text-align: center;\"></span></span> <div class=\"paragraph\" style=\"text-align:left;display:block;\">The ongoing and violent occupation of Minnesota by thousands of illegally masked, heavily armed, and poorly trained Federal immigration enforcement agents is shocking \u2014 but it is not surprising. This increasingly dangerous situation in Minnesota and in the country overall has arisen in the context of racial capitalism that currently dominates the nation.<br/>Despite the nice-sounding rhetoric a..."
+    ],
+    "div.blog-post": [
+      "<div class=\"blog-post\" id=\"blog-post-979711674394308490\">\n<div class=\"blog-header\">\n<h2 class=\"blog-title\">\n<a class=\"blog-title-link blog-link\" href=\"//www.unityunitarian.org/beloved-community-news/racialized-capitalism-means-racialized-immigration-enforcement\">Racialized Capitalism Means Racialized Immigration \"Enforcement\"</a>\n</h2>\n<p class=\"blog-date\">\n<span class=\"date-text\">\n\t\t2/20/2026\n\t</span>\n</p>\n<p class=\"blog-comments\">\n<a class=\"blog-link\" href=\"//www.unityunitarian.org/beloved-community-news/racialized-capitalism-means-racialized-immigration-enforcement#comments\">comments</a>\n</p>\n</div>\n<div class=\"blog-separator\">\u00a0</div>\n<div class=\"blog-content\">\n<div class=\"paragraph\"><strong>Justin Cummins, Guest Writer for the Beloved Community Communications Team</strong></div> <span class=\"imgPusher\" style=\"float:left;height:0px\"></span><span style=\"display: table;width:auto;position:relative;float:left;max-width:100%;;clear:left;margin-top:0px;*margin-top:0px\"><a><img alt=\"Justin Cummins\" class=\"galleryImageBorder wsite-image\" src=\"/uploads/6/1/0/3/6103699/published/justin-cummins-2026.jpg?1771620514\" style=\"margin-top: 0px; margin-bottom: 10px; margin-left: 0px; margin-right: 10px; border-width:0; max-width:100%\"/></a><span class=\"wsite-caption\" style=\"display: table-caption; caption-side: bottom; font-size: 90%; margin-top: -10px; margin-bottom: 10px; text-align: center;\"></span></span> <div class=\"paragraph\" style=\"text-align:left;display:block;\">The ongoing and violent occupation of Minnesota by thousands of illegally masked, heavily armed, and poorly trained Federal immigration enforcement agents is shocking \u2014 but it is not surprising. This increasingly dangerous situation in Minnesota and in the country overall has arisen in the context of racial capitalism that currently dominates the nation.<br/>Despite the nice-sounding rhetoric about capitalism, that it promotes freedom and prosperity, capitalism involves the exploitation of people, other life, and ..."
+    ]
+  },
+  "next_page_examples": {
+    "div.blog-page-nav-previous a": [
+      "<a class=\"blog-link\" href=\"/beloved-community-news/category/all/2\">&lt;&lt;Previous</a>"
+    ]
+  },
+  "title_selectors": [
+    "h2.blog-title",
+    "a.blog-title-link"
+  ],
+  "title_examples": {
+    "h2.blog-title": [
+      "<h2 class=\"blog-title\">\n<a class=\"blog-title-link blog-link\" href=\"//www.unityunitarian.org/beloved-community-news/racialized-capitalism-means-racialized-immigration-enforcement\">Racialized Capitalism Means Racialized Immigration \"Enforcement\"</a>\n</h2>"
+    ],
+    "a.blog-title-link": [
+      "<a class=\"blog-title-link blog-link\" href=\"//www.unityunitarian.org/beloved-community-news/racialized-capitalism-means-racialized-immigration-enforcement\">Racialized Capitalism Means Racialized Immigration \"Enforcement\"</a>"
+    ]
+  },
+  "date_selectors": [
+    "p.blog-date",
+    "span.date-text"
+  ],
+  "date_examples": {
+    "p.blog-date": [
+      "<p class=\"blog-date\">\n<span class=\"date-text\">\n\t\t2/20/2026\n\t</span>\n</p>"
+    ],
+    "span.date-text": [
+      "<span class=\"date-text\">\n\t\t2/20/2026\n\t</span>"
+    ]
+  },
+  "url_selectors": [
+    "div.blog-post a.blog-title-link[href]",
+    "a.blog-title-link[href]"
+  ],
+  "url_examples": {
+    "div.blog-post a.blog-title-link[href]": [
+      "<a class=\"blog-title-link blog-link\" href=\"//www.unityunitarian.org/beloved-community-news/racialized-capitalism-means-racialized-immigration-enforcement\">Racialized Capitalism Means Racialized Immigration \"Enforcement\"</a>"
+    ],
+    "a.blog-title-link[href]": [
+      "<a class=\"blog-title-link blog-link\" href=\"//www.unityunitarian.org/beloved-community-news/racialized-capitalism-means-racialized-immigration-enforcement\">Racialized Capitalism Means Racialized Immigration \"Enforcement\"</a>"
+    ]
+  }
+}

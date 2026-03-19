@@ -1,0 +1,58 @@
+{
+  "item_selectors": [
+    "div.views-row"
+  ],
+  "next_page_selectors": [
+    "nav.pager a[href*=\"page=\"]",
+    ".pager__item--next a"
+  ],
+  "item_examples": {
+    "div.views-row": [
+      "<div class=\"views-row\"><div class=\"views-field views-field-field-media\"><div class=\"field-content\"> <a href=\"/our-hearts-are-heavy\" hreflang=\"en\"><img alt=\"MNchurches\" class=\"pure-img\" height=\"70\" loading=\"lazy\" src=\"/sites/mnchurches.org/files/2025-12/logoblack.jpg\" width=\"70\"/>\n</a>\n</div></div><div class=\"views-field views-field-body\"><div class=\"field-content\"><div class=\"teaser-title\"><a href=\"/our-hearts-are-heavy\" hreflang=\"en\">Our hearts are heavy</a></div><div class=\"post-date\">Posted <time class=\"datetime\" datetime=\"2026-01-08T02:57:42Z\">01/07/2026 - 8:57pm</time>\n</div><div class=\"teaser-body\"> </div><div class=\"read-more\"><a href=\"/our-hearts-are-heavy\" hreflang=\"en\">Read More</a> </div></div></div></div>"
+    ]
+  },
+  "next_page_examples": {
+    "nav.pager a[href*=\"page=\"]": [
+      "<a href=\"/news?page=1\" rel=\"next\" title=\"Go to next page\">\n<span class=\"visually-hidden\">Next page</span>\n<span aria-hidden=\"true\">\u203a\u203a</span>\n</a>"
+    ],
+    ".pager__item--next a": [
+      "<a href=\"/news?page=1\" rel=\"next\" title=\"Go to next page\">\n<span class=\"visually-hidden\">Next page</span>\n<span aria-hidden=\"true\">\u203a\u203a</span>\n</a>"
+    ]
+  },
+  "title_selectors": [
+    "div.views-row .teaser-title a",
+    "div.views-row .teaser-title"
+  ],
+  "title_examples": {
+    "div.views-row .teaser-title a": [
+      "<a href=\"/our-hearts-are-heavy\" hreflang=\"en\">Our hearts are heavy</a>"
+    ],
+    "div.views-row .teaser-title": [
+      "<div class=\"teaser-title\"><a href=\"/our-hearts-are-heavy\" hreflang=\"en\">Our hearts are heavy</a></div>"
+    ]
+  },
+  "date_selectors": [
+    "div.views-row .post-date time.datetime",
+    "div.views-row .post-date"
+  ],
+  "date_examples": {
+    "div.views-row .post-date time.datetime": [
+      "<time class=\"datetime\" datetime=\"2026-01-08T02:57:42Z\">01/07/2026 - 8:57pm</time>"
+    ],
+    "div.views-row .post-date": [
+      "<div class=\"post-date\">Posted <time class=\"datetime\" datetime=\"2026-01-08T02:57:42Z\">01/07/2026 - 8:57pm</time>\n</div>"
+    ]
+  },
+  "url_selectors": [
+    "div.views-row .teaser-title a[href]",
+    "div.views-row a[href]"
+  ],
+  "url_examples": {
+    "div.views-row .teaser-title a[href]": [
+      "<a href=\"/our-hearts-are-heavy\" hreflang=\"en\">Our hearts are heavy</a>"
+    ],
+    "div.views-row a[href]": [
+      "<a href=\"/our-hearts-are-heavy\" hreflang=\"en\"><img alt=\"MNchurches\" class=\"pure-img\" height=\"70\" loading=\"lazy\" src=\"/sites/mnchurches.org/files/2025-12/logoblack.jpg\" width=\"70\"/>\n</a>"
+    ]
+  }
+}

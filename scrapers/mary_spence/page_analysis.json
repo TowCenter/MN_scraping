@@ -1,0 +1,56 @@
+{
+  "item_selectors": [
+    "div.ctaStory",
+    "div.featuredGrantee"
+  ],
+  "next_page_selectors": [
+    ".nav-previous a",
+    "#pagination .nav-previous a"
+  ],
+  "item_examples": {
+    "div.ctaStory": [
+      "<div class=\"ctaStory col-sm-12\">\n<div class=\"ctaStoryImage\">\n<img alt=\"\" class=\"attachment-blog size-blog wp-post-image\" decoding=\"async\" fetchpriority=\"high\" height=\"512\" sizes=\"(max-width: 768px) 100vw, 768px\" src=\"https://maryspence.org/wp-content/uploads/2022/01/Emily-Headshot-Wide-website-768x512.png\" srcset=\"https://maryspence.org/wp-content/uploads/2022/01/Emily-Headshot-Wide-website-768x512.png 768w, https://maryspence.org/wp-content/uploads/2022/01/Emily-Headshot-Wide-website-300x200.png 300w, https://maryspence.org/wp-content/uploads/2022/01/Emily-Headshot-Wide-website-900x600.png 900w, https://maryspence.org/wp-content/uploads/2022/01/Emily-Headshot-Wide-website.png 1000w\" width=\"768\"/> </div>\n<div class=\"ctaStoryContent\">\n<h3 class=\"featuredStoryTitle\"><a href=\"https://maryspence.org/news-events/introducing-marys-pence-new-executive-director/\">Introducing Mary\u2019s Pence New Executive Director</a></h3>\n<p>We are thrilled to introduce Emily Monroe as our new Executive Director. Emily\u2019s selection reflects our commitment to finding a leader who embodies the values and mission that have made Mary\u2019s Pence successful. Emily is a past recipient of a Mary\u2019s Pence grant, which gives her a unique understanding of our grant-making process and the [\u2026]</p>\n<p><a class=\"readMore\" href=\"https://maryspence.org/news-events/introducing-marys-pence-new-executive-director/\">Read More \u00bb</a></p> </div>\n</div>"
+    ],
+    "div.featuredGrantee": [
+      "<div class=\"featuredGrantee col-md-6 col-lg-4\">\n<img alt=\"\" class=\"attachment-blog size-blog wp-post-image\" decoding=\"async\" height=\"512\" sizes=\"(max-width: 768px) 100vw, 768px\" src=\"https://maryspence.org/wp-content/uploads/2026/02/IMG_20260213_114247-768x512.jpg\" srcset=\"https://maryspence.org/wp-content/uploads/2026/02/IMG_20260213_114247-768x512.jpg 768w, https://maryspence.org/wp-content/uploads/2026/02/IMG_20260213_114247-900x600.jpg 900w, https://maryspence.org/wp-content/uploads/2026/02/IMG_20260213_114247-1200x800.jpg 1200w\" width=\"768\"/>\n<p class=\"granteeFocus\"><a href=\"https://maryspence.org/news-events/category/events/\">Events</a></p>\n<div class=\"featuredGranteeContent\">\n<h2><a href=\"https://maryspence.org/news-events/new-executive-director-meets-marys-pence-team-in-central-america/\">New Executive Director Meets Mary\u2019s Pence Team in Central America</a></h2>\n<p>We\u2019re excited to share highlights from our Executive Director, Emily\u2019s first visit to our Mary\u2019s Pence team and partners in El Salvador! Emily spent time with the women of the...</p> <a class=\"readMore\" href=\"https://maryspence.org/news-events/new-executive-director-meets-marys-pence-team-in-central-america/\">Read More \u00bb</a>\n</div><!-- .featuredGranteeContent -->\n</div>"
+    ]
+  },
+  "next_page_examples": {
+    ".nav-previous a": [
+      "<a href=\"https://maryspence.org/news-events/page/2/\">\u00ab More Stories</a>"
+    ],
+    "#pagination .nav-previous a": [
+      "<a href=\"https://maryspence.org/news-events/page/2/\">\u00ab More Stories</a>"
+    ]
+  },
+  "title_selectors": [
+    "h3.featuredStoryTitle a",
+    "div.featuredGranteeContent h2 a"
+  ],
+  "title_examples": {
+    "h3.featuredStoryTitle a": [
+      "<a href=\"https://maryspence.org/news-events/introducing-marys-pence-new-executive-director/\">Introducing Mary\u2019s Pence New Executive Director</a>"
+    ],
+    "div.featuredGranteeContent h2 a": [
+      "<a href=\"https://maryspence.org/news-events/new-executive-director-meets-marys-pence-team-in-central-america/\">New Executive Director Meets Mary\u2019s Pence Team in Central America</a>"
+    ]
+  },
+  "date_selectors": [],
+  "date_examples": {},
+  "url_selectors": [
+    "h3.featuredStoryTitle a",
+    "a.readMore",
+    "div.featuredGranteeContent h2 a"
+  ],
+  "url_examples": {
+    "h3.featuredStoryTitle a": [
+      "<a href=\"https://maryspence.org/news-events/introducing-marys-pence-new-executive-director/\">Introducing Mary\u2019s Pence New Executive Director</a>"
+    ],
+    "a.readMore": [
+      "<a class=\"readMore\" href=\"https://maryspence.org/news-events/introducing-marys-pence-new-executive-director/\">Read More \u00bb</a>"
+    ],
+    "div.featuredGranteeContent h2 a": [
+      "<a href=\"https://maryspence.org/news-events/new-executive-director-meets-marys-pence-team-in-central-america/\">New Executive Director Meets Mary\u2019s Pence Team in Central America</a>"
+    ]
+  }
+}

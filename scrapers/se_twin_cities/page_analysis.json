@@ -1,0 +1,62 @@
+{
+  "item_selectors": [
+    "article.ultp-block-item",
+    ".ultp-block-item"
+  ],
+  "next_page_selectors": [
+    ".ultp-pagination a",
+    ".ultp-next-page-numbers a"
+  ],
+  "item_examples": {
+    "article.ultp-block-item": [
+      "<article class=\"ultp-block-item ultp-block-media post-id-72220\"><div class=\"ultp-block-content-wrap ultp-first-postlist-2\"><div class=\"ultp-block-image ultp-block-image-zoomIn\"><a href=\"https://setwincities.com/pam-altendorf-voices-opposition-to-minnesota-red-flag-gun-laws-on-social-media/\"><img alt=\"Pam Altendorf voices opposition to Minnesota red flag gun laws on social media\" class=\"fva-cover-img\" fifulocal-featured=\"1\" post-id=\"72220\" src=\"https://d33ioocfz0fzi4.cloudfront.net/jns-media/69/8e/26161790/webp_eg1l1lmm8j0fxh63u13j29fo86i8.webp\" title=\"Pam Altendorf voices opposition to Minnesota red flag gun laws on social media\"/></a></div><div class=\"ultp-block-content\"><div class=\"ultp-category-grid ultp-category-classic ultp-category-aboveTitle\"><div class=\"ultp-category-in\"><a class=\"ultp-cat-local-government\" href=\"https://setwincities.com/category/local-government/\">Local Government</a></div></div><h3 class=\"ultp-block-title\"><a href=\"https://setwincities.com/pam-altendorf-voices-opposition-to-minnesota-red-flag-gun-laws-on-social-media/\">Pam Altendorf voices opposition to Minnesota red flag gun laws on social media</a></h3><div class=\"ultp-block-meta ultp-block-meta-verticalbar ultp-block-meta-noIcon\"><span class=\"ultp-block-author ultp-block-meta-element\">By<a class=\"\" href=\"https://setwincities.com/author/missouri-courts-daily/\">Missouri Courts Daily</a></span><span class=\"ultp-block-date ultp-block-meta-element\">Aug 29, 2025</span><span class=\"ultp-post-comment ultp-block-meta-element\">0 comments</span><span class=\"ultp-post-view ultp-block-meta-element\">27 views</span></div><div class=\"ultp-block-excerpt\"><p>Minnesota State Representative Pam Altendorf shared multiple posts between August 27-29, 2025 discussing recent political events and legislation in Minnesota.</p>\n</div></div></div></article>"
+    ],
+    ".ultp-block-item": [
+      "<article class=\"ultp-block-item ultp-block-media post-id-72220\"><div class=\"ultp-block-content-wrap ultp-first-postlist-2\"><div class=\"ultp-block-image ultp-block-image-zoomIn\"><a href=\"https://setwincities.com/pam-altendorf-voices-opposition-to-minnesota-red-flag-gun-laws-on-social-media/\"><img alt=\"Pam Altendorf voices opposition to Minnesota red flag gun laws on social media\" class=\"fva-cover-img\" fifulocal-featured=\"1\" post-id=\"72220\" src=\"https://d33ioocfz0fzi4.cloudfront.net/jns-media/69/8e/26161790/webp_eg1l1lmm8j0fxh63u13j29fo86i8.webp\" title=\"Pam Altendorf voices opposition to Minnesota red flag gun laws on social media\"/></a></div><div class=\"ultp-block-content\"><div class=\"ultp-category-grid ultp-category-classic ultp-category-aboveTitle\"><div class=\"ultp-category-in\"><a class=\"ultp-cat-local-government\" href=\"https://setwincities.com/category/local-government/\">Local Government</a></div></div><h3 class=\"ultp-block-title\"><a href=\"https://setwincities.com/pam-altendorf-voices-opposition-to-minnesota-red-flag-gun-laws-on-social-media/\">Pam Altendorf voices opposition to Minnesota red flag gun laws on social media</a></h3><div class=\"ultp-block-meta ultp-block-meta-verticalbar ultp-block-meta-noIcon\"><span class=\"ultp-block-author ultp-block-meta-element\">By<a class=\"\" href=\"https://setwincities.com/author/missouri-courts-daily/\">Missouri Courts Daily</a></span><span class=\"ultp-block-date ultp-block-meta-element\">Aug 29, 2025</span><span class=\"ultp-post-comment ultp-block-meta-element\">0 comments</span><span class=\"ultp-post-view ultp-block-meta-element\">27 views</span></div><div class=\"ultp-block-excerpt\"><p>Minnesota State Representative Pam Altendorf shared multiple posts between August 27-29, 2025 discussing recent political events and legislation in Minnesota.</p>\n</div></div></div></article>"
+    ]
+  },
+  "next_page_examples": {
+    ".ultp-pagination a": [
+      "<a href=\"https://setwincities.com/category/local-government/\"><svg fill=\"none\" viewbox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"m15 18-6-6 6-6\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\"></path>\n</svg>\n Previous</a>"
+    ],
+    ".ultp-next-page-numbers a": [
+      "<a href=\"https://setwincities.com/category/local-government/page/2/\">Next<svg fill=\"none\" viewbox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"m9 18 6-6-6-6\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\"></path>\n</svg>\n</a>"
+    ]
+  },
+  "title_selectors": [
+    ".ultp-block-title a",
+    "h3.ultp-block-title"
+  ],
+  "title_examples": {
+    ".ultp-block-title a": [
+      "<a href=\"https://setwincities.com/pam-altendorf-voices-opposition-to-minnesota-red-flag-gun-laws-on-social-media/\">Pam Altendorf voices opposition to Minnesota red flag gun laws on social media</a>"
+    ],
+    "h3.ultp-block-title": [
+      "<h3 class=\"ultp-block-title\"><a href=\"https://setwincities.com/pam-altendorf-voices-opposition-to-minnesota-red-flag-gun-laws-on-social-media/\">Pam Altendorf voices opposition to Minnesota red flag gun laws on social media</a></h3>"
+    ]
+  },
+  "date_selectors": [
+    ".ultp-block-meta .ultp-block-date",
+    "span.ultp-block-date"
+  ],
+  "date_examples": {
+    ".ultp-block-meta .ultp-block-date": [
+      "<span class=\"ultp-block-date ultp-block-meta-element\">Aug 29, 2025</span>"
+    ],
+    "span.ultp-block-date": [
+      "<span class=\"ultp-block-date ultp-block-meta-element\">Aug 29, 2025</span>"
+    ]
+  },
+  "url_selectors": [
+    "article.ultp-block-item a",
+    ".ultp-block-title a"
+  ],
+  "url_examples": {
+    "article.ultp-block-item a": [
+      "<a href=\"https://setwincities.com/pam-altendorf-voices-opposition-to-minnesota-red-flag-gun-laws-on-social-media/\"><img alt=\"Pam Altendorf voices opposition to Minnesota red flag gun laws on social media\" class=\"fva-cover-img\" fifulocal-featured=\"1\" post-id=\"72220\" src=\"https://d33ioocfz0fzi4.cloudfront.net/jns-media/69/8e/26161790/webp_eg1l1lmm8j0fxh63u13j29fo86i8.webp\" title=\"Pam Altendorf voices opposition to Minnesota red flag gun laws on social media\"/></a>"
+    ],
+    ".ultp-block-title a": [
+      "<a href=\"https://setwincities.com/pam-altendorf-voices-opposition-to-minnesota-red-flag-gun-laws-on-social-media/\">Pam Altendorf voices opposition to Minnesota red flag gun laws on social media</a>"
+    ]
+  }
+}
