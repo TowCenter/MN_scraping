@@ -254,18 +254,11 @@ def main():
     st.divider()
 
     # === FILTERS + CSV EXPORT ===
-    fc1, fc2, fc3 = st.columns([3, 2, 1])
+    fc1, fc2 = st.columns([3, 1])
     with fc1:
-        status_filter = st.radio(
-            "Filter by status",
-            options=["All", "Error", "No Results", "Inactive only"],
-            horizontal=True,
-            key="health_status_filter",
-        )
-    with fc2:
         org_options = ["All"] + sorted([org.get("name", "Unknown") for org in organizations_data])
         selected_org = st.selectbox("Filter by org", org_options, key="health_school_filter")
-    with fc3:
+    with fc2:
         st.markdown("<div style='padding-top:1.65rem'></div>", unsafe_allow_html=True)
         st.download_button(
             label="Export CSV",
