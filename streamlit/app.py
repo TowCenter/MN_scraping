@@ -197,58 +197,20 @@ def main():
         return
 
     # === METRICS ===
-    current_time = datetime.now(timezone.utc)
     total_items = db[CONTENT_COL].count_documents({})
 
-    total_scrapers_all = 0
-    passing = errors = no_results = inactive = 0
-    for org in organizations_data:
-        for s in org.get("scrapers", []):
-            total_scrapers_all += 1
-            active = s.get("active", True)
-            status = s.get("last_run_status")
-            if active is False:
-                inactive += 1
-            elif status == "pass":
-                passing += 1
-            elif status == "error":
-                errors += 1
-            elif status == "unable_to_fetch":
-                no_results += 1
+    total_scrapers_all = sum(len(org.get("scrapers", [])) for org in organizations_data)
 
-    rate_denom = passing + errors + no_results  # known active scrapers only
-
-    def pct(n):
-        return f" ({n * 100 // rate_denom}%)" if rate_denom else ""
-
-    m1, m2, _gap, m3, m4 = st.columns([1, 1, 0.08, 1, 1])
+    m1, m2 = st.columns(2)
     with m1:
         st.metric(
             "Total Scrapers", total_scrapers_all,
-            help="All registered scrapers across every org, including inactive ones.",
+            help="All registered scrapers across every org.",
         )
     with m2:
         st.metric(
             "Total Items", f"{total_items:,}",
             help="Total scraped items stored in the database across all time.",
-        )
-    with _gap:
-        st.markdown(
-            "<div style='display:flex;justify-content:center;align-items:center;height:72px'>"
-            "<div style='width:1px;height:52px;background:#dde1e7'></div>"
-            "</div>",
-            unsafe_allow_html=True,
-        )
-    with m3:
-        st.metric(
-            "Passing", f"{passing}{pct(passing)}",
-            help="Active scrapers whose last run successfully inserted new items. "
-                 "Percentage is share of all active (non-inactive) scrapers.",
-        )
-    with m4:
-        st.metric(
-            "Inactive", inactive,
-            help="Scrapers with active=false — permanently skipped during daily runs.",
         )
 
     st.divider()
@@ -281,44 +243,15 @@ def main():
 
         scrapers = org.get("scrapers", [])
 
-        # Org-level status filter: skip org if no matching scrapers
-        if status_filter == "Error":
-            if not any(
-                s.get("last_run_status") == "error" and s.get("active", True) is not False
-                for s in scrapers
-            ):
-                continue
-        elif status_filter == "No Results":
-            if not any(
-                s.get("last_run_status") == "unable_to_fetch" and s.get("active", True) is not False
-                for s in scrapers
-            ):
-                continue
-        elif status_filter == "Inactive only":
-            if not any(s.get("active", True) is False for s in scrapers):
-                continue
-
         for scraper in scrapers:
-            active = scraper.get("active", True)
-            status = scraper.get("last_run_status")
-
-            # Row-level status filter
-            if status_filter == "Error" and not (status == "error" and active is not False):
-                continue
-            if status_filter == "No Results" and not (status == "unable_to_fetch" and active is not False):
-                continue
-            if status_filter == "Inactive only" and active is not False:
-                continue
-
             path = scraper.get("path", "")
             module_name = path.split(".")[-1] if path else path
             url = scraper.get("url", "")
-            has_error = status in ("error", "unable_to_fetch") and active is not False
 
             stats = stats_by_path.get(path, {})
 
             rows.append({
-                "_sort": (0 if has_error else 1, org_name.lower()),
+                "_sort": org_name.lower(),
                 "Org": org_name,
                 "Scraper": module_name,
                 "URL": url,
