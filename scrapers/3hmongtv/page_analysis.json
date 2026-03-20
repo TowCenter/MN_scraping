@@ -1,12 +1,48 @@
 {
-  "item_selectors": [],
+  "item_selectors": [
+    "a[href^=\"/stories/\"]",
+    ".rounded-lg.border.bg-card"
+  ],
   "next_page_selectors": [],
-  "item_examples": {},
+  "item_examples": {
+    "a[href^=\"/stories/\"]": [
+      "<a href=\"/stories/federal-judge-finds-ice-agents-likely-engaged-in-racial-profiling-during-minnesota-operations\"><div class=\"rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden h-full hover:shadow-lg transition-shadow duration-300 group\"><div class=\"aspect-video relative overflow-hidden\"><img alt=\"Federal Judge Finds ICE Agents Likely Engaged in Racial Profiling During Minnesota Operations\" class=\"absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABLAAAAKtCAIAAAC42wDnAAAACXBIWXMAAAsTAAALEwEAmpwYAAspNElEQVR4nOz96Y8ke7IlhvkeEZlZVXfrZd7rNzMiHyEBFCAIAgR+0f8PfRIFUCNSIIfkW3u7S1UuEeGrcOzY5h6RVVl37X5T0bfvzYyMcP/5b7VjduxY+T/+w7/M81zYa8H/l6Is5ZfF3yzt3/7r93hfXiUv/vwHnn3fLqDv+RXe9/lS//fc5+Op1w1Y/77qhyuff+YD9m406sfqSf0hemL1gB/uyWeG4KMb8KEb/egNiAukHiiLckEv4xf/wRqw+tU/n7owrr3pUpto+R1/yz7gi2U9BPi3vL8sy+YHbdiL3+cPP/X7v3jDZJ3omMvgWi/afEnbkvy0rFbZkn/An/gFmQHyeXmTf8JlF7zw+dnW92wf4Cf0Z13d5fL8hsQL6n85pfTibAGbwAeSd7Rd+FUnrX5a/s2W51vr+/b2UszyFu+ijdUfl2LBAxUzP2L3TINY+D9pzsovFS8/Tct5nI5Pw/F4ejz25/PQj3jxs1VZVnVtX8W4VVXVtFVTV3VVNk1TVWVVVk1d1k21a+p9W7V4r6hk9MpytqfxJqGx47xM83I6D/fH8Y/fHvtxnJZ5wp9kXHzY7ItlgZbEzpy2YOnrGR/Av8u6Kodh+OLN4T/89vWb13eYgfNcLKNddF6W2Rf2vCzlgi8O0/THt0//+K9fL8tS1+2yVJN8ip8tsd8s/Tidjqd+6OdZulpelc7VpamKXdf+7revfvXFa/QK+gDt5yNwhuO28r95KSZMjWWYp3/6+vi//ud/GcdzWdVL2dgcsP0El7dJKDeUMcEPVVUVxVJVxTyelqK4uXv9f/yPv/p3X+7xUEXFRSSTL/rNtzvOiKqap7H456+H/+V/+/M49HUtY80b68Ppc8oP/DVvlOutUL5pH+dUYYvRgKrEbNnvmtc39e2+bZqKjVlmDAnmNP6zLIuNv0z7eV7maT7103cPw9uH/nzm3JzkT3gV8l+MrE60NDV0ScaBHi97pPwA/hYmdIX5W+k/2K8wlOUyjkNXl7/+/NXf/uZN1zbzPBbFVC6TdLMONL6oY41/8PiYafKXqqyK5eE0/k//+Z//8R//4eZmf/fmy67rpmmSFRxrd5lx02keH969++PX9+e+lxWBTvLFxCXCPuf+URXDPD4uU/nVb//u//Hf/V9+++WrZZ5kiygwHbnZrcYwnYx6nXIusMYxFarq7Xfv/p///f/vD7//Y4PV3srK5wjLpwsMKxfhMIwD1kz96vbmcOjquikxP3VzxF2T2cldUHp8nqaxKsq6rH77my/+/b//7b5pZNXoN2U3lB/CvlofwdoBxYTuqJqmadvd+Xz67//Tf/7v/9//aZ7mptuVZe07c1xApiX/Nc/jNB6n/lhWt//tf/Nf/9..."
+    ],
+    ".rounded-lg.border.bg-card": [
+      "<div class=\"rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden h-full hover:shadow-lg transition-shadow duration-300 group\"><div class=\"aspect-video relative overflow-hidden\"><img alt=\"Federal Judge Finds ICE Agents Likely Engaged in Racial Profiling During Minnesota Operations\" class=\"absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABLAAAAKtCAIAAAC42wDnAAAACXBIWXMAAAsTAAALEwEAmpwYAAspNElEQVR4nOz96Y8ke7IlhvkeEZlZVXfrZd7rNzMiHyEBFCAIAgR+0f8PfRIFUCNSIIfkW3u7S1UuEeGrcOzY5h6RVVl37X5T0bfvzYyMcP/5b7VjduxY+T/+w7/M81zYa8H/l6Is5ZfF3yzt3/7r93hfXiUv/vwHnn3fLqDv+RXe9/lS//fc5+Op1w1Y/77qhyuff+YD9m406sfqSf0hemL1gB/uyWeG4KMb8KEb/egNiAukHiiLckEv4xf/wRqw+tU/n7owrr3pUpto+R1/yz7gi2U9BPi3vL8sy+YHbdiL3+cPP/X7v3jDZJ3omMvgWi/afEnbkvy0rFbZkn/An/gFmQHyeXmTf8JlF7zw+dnW92wf4Cf0Z13d5fL8hsQL6n85pfTibAGbwAeSd7Rd+FUnrX5a/s2W51vr+/b2UszyFu+ijdUfl2LBAxUzP2L3TINY+D9pzsovFS8/Tct5nI5Pw/F4ejz25/PQj3jxs1VZVnVtX8W4VVXVtFVTV3VVNk1TVWVVVk1d1k21a+p9W7V4r6hk9MpytqfxJqGx47xM83I6D/fH8Y/fHvtxnJZ5wp9kXHzY7ItlgZbEzpy2YOnrGR/Av8u6Kodh+OLN4T/89vWb13eYgfNcLKNddF6W2Rf2vCzlgi8O0/THt0//+K9fL8tS1+2yVJN8ip8tsd8s/Tidjqd+6OdZulpelc7VpamKXdf+7revfvXFa/QK+gDt5yNwhuO28r95KSZMjWWYp3/6+vi//ud/GcdzWdVL2dgcsP0El7dJKDeUMcEPVVUVxVJVxTyelqK4uXv9f/yPv/p3X+7xUEXFRSSTL/rNtzvOiKqap7H456+H/+V/+/M49HUtY80b68Ppc8oP/DVvlOutUL5pH+dUYYvRgKrEbNnvmtc39e2+bZqKjVlmDAnmNP6zLIuNv0z7eV7maT7103cPw9uH/nzm3JzkT3gV8l+MrE60NDV0ScaBHi97pPwA/hYmdIX5W+k/2K8wlOUyjkNXl7/+/NXf/uZN1zbzPBbFVC6TdLMONL6oY41/8PiYafKXqqyK5eE0/k//+Z//8R//4eZmf/fmy67rpmmSFRxrd5lx02keH969++PX9+e+lxWBTvLFxCXCPuf+URXDPD4uU/nVb//u//Hf/V9+++WrZZ5kiygwHbnZrcYwnYx6nXIusMYxFarq7Xfv/p///f/vD7//Y4PV3srK5wjLpwsMKxfhMIwD1kz96vbmcOjquikxP3VzxF2T2cldUHp8nqaxKsq6rH77my/+/b//7b5pZNXoN2U3lB/CvlofwdoBxYTuqJqmadvd+Xz67//Tf/7v/9//aZ7mptuVZe07c1xApiX/Nc/jNB6n/lhWt//tf/Nf/9//r3/fdljAF9bFatLreSFTMG3gxSwdLhN7rsqqw6ttmkaPt6WYpomzuO+Ht9+8/f/+j//7n7/+bhinum6Ksq7r5nB7++WXX/2H/8PftU1zPvXv7u/..."
+    ]
+  },
   "next_page_examples": {},
-  "title_selectors": [],
-  "title_examples": {},
-  "date_selectors": [],
-  "date_examples": {},
-  "url_selectors": [],
-  "url_examples": {}
+  "title_selectors": [
+    "a[href^=\"/stories/\"] h3",
+    "h3.font-semibold"
+  ],
+  "title_examples": {
+    "a[href^=\"/stories/\"] h3": [
+      "<h3 class=\"font-semibold text-lg line-clamp-2 group-hover:text-navy-600 transition-colors\">Federal Judge Finds ICE Agents Likely Engaged in Racial Profiling During Minnesota Operations</h3>"
+    ],
+    "h3.font-semibold": [
+      "<h3 class=\"font-semibold text-lg line-clamp-2 group-hover:text-navy-600 transition-colors\">Federal Judge Finds ICE Agents Likely Engaged in Racial Profiling During Minnesota Operations</h3>"
+    ]
+  },
+  "date_selectors": [
+    "a[href^=\"/stories/\"] .flex.items-center.justify-between span:last-child",
+    ".flex.items-center.justify-between span:last-child"
+  ],
+  "date_examples": {
+    "a[href^=\"/stories/\"] .flex.items-center.justify-between span:last-child": [
+      "<span>March 16, 2026</span>"
+    ],
+    ".flex.items-center.justify-between span:last-child": [
+      "<span>March 16, 2026</span>"
+    ]
+  },
+  "url_selectors": [
+    "a[href^=\"/stories/\"]"
+  ],
+  "url_examples": {
+    "a[href^=\"/stories/\"]": [
+      "<a href=\"/stories/federal-judge-finds-ice-agents-likely-engaged-in-racial-profiling-during-minnesota-operations\"><div class=\"rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden h-full hover:shadow-lg transition-shadow duration-300 group\"><div class=\"aspect-video relative overflow-hidden\"><img alt=\"Federal Judge Finds ICE Agents Likely Engaged in Racial Profiling During Minnesota Operations\" class=\"absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300\" src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABLAAAAKtCAIAAAC42wDnAAAACXBIWXMAAAsTAAALEwEAmpwYAAspNElEQVR4nOz96Y8ke7IlhvkeEZlZVXfrZd7rNzMiHyEBFCAIAgR+0f8PfRIFUCNSIIfkW3u7S1UuEeGrcOzY5h6RVVl37X5T0bfvzYyMcP/5b7VjduxY+T/+w7/M81zYa8H/l6Is5ZfF3yzt3/7r93hfXiUv/vwHnn3fLqDv+RXe9/lS//fc5+Op1w1Y/77qhyuff+YD9m406sfqSf0hemL1gB/uyWeG4KMb8KEb/egNiAukHiiLckEv4xf/wRqw+tU/n7owrr3pUpto+R1/yz7gi2U9BPi3vL8sy+YHbdiL3+cPP/X7v3jDZJ3omMvgWi/afEnbkvy0rFbZkn/An/gFmQHyeXmTf8JlF7zw+dnW92wf4Cf0Z13d5fL8hsQL6n85pfTibAGbwAeSd7Rd+FUnrX5a/s2W51vr+/b2UszyFu+ijdUfl2LBAxUzP2L3TINY+D9pzsovFS8/Tct5nI5Pw/F4ejz25/PQj3jxs1VZVnVtX8W4VVXVtFVTV3VVNk1TVWVVVk1d1k21a+p9W7V4r6hk9MpytqfxJqGx47xM83I6D/fH8Y/fHvtxnJZ5wp9kXHzY7ItlgZbEzpy2YOnrGR/Av8u6Kodh+OLN4T/89vWb13eYgfNcLKNddF6W2Rf2vCzlgi8O0/THt0//+K9fL8tS1+2yVJN8ip8tsd8s/Tidjqd+6OdZulpelc7VpamKXdf+7revfvXFa/QK+gDt5yNwhuO28r95KSZMjWWYp3/6+vi//ud/GcdzWdVL2dgcsP0El7dJKDeUMcEPVVUVxVJVxTyelqK4uXv9f/yPv/p3X+7xUEXFRSSTL/rNtzvOiKqap7H456+H/+V/+/M49HUtY80b68Ppc8oP/DVvlOutUL5pH+dUYYvRgKrEbNnvmtc39e2+bZqKjVlmDAnmNP6zLIuNv0z7eV7maT7103cPw9uH/nzm3JzkT3gV8l+MrE60NDV0ScaBHi97pPwA/hYmdIX5W+k/2K8wlOUyjkNXl7/+/NXf/uZN1zbzPBbFVC6TdLMONL6oY41/8PiYafKXqqyK5eE0/k//+Z//8R//4eZmf/fmy67rpmmSFRxrd5lx02keH969++PX9+e+lxWBTvLFxCXCPuf+URXDPD4uU/nVb//u//Hf/V9+++WrZZ5kiygwHbnZrcYwnYx6nXIusMYxFarq7Xfv/p///f/vD7//Y4PV3srK5wjLpwsMKxfhMIwD1kz96vbmcOjquikxP3VzxF2T2cldUHp8nqaxKsq6rH77my/+/b//7b5pZNXoN2U3lB/CvlofwdoBxYTuqJqmadvd+Xz67//Tf/7v/9//aZ7mptuVZe07c1xApiX/Nc/jNB6n/lhWt//tf/Nf/9..."
+    ]
+  }
 }
