@@ -1,0 +1,9 @@
+{
+    "name": "Sahan Journal",
+    "scrapers": [
+        {
+            "path": "scrapers.sahan_journal.scraper2",
+            "url": "https://sahanjournal.com/archive/"
+        }
+    ]
+}

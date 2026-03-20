@@ -1,0 +1,42 @@
+{
+  "item_selectors": [
+    ".ultp-block-item",
+    ".ultp-block-media"
+  ],
+  "next_page_selectors": [],
+  "item_examples": {
+    ".ultp-block-item": [
+      "<div class=\"ultp-block-item ultp-block-media post-id-202956\"><div class=\"ultp-block-content-wrap ultp-first-postlist-2\"><div class=\"ultp-block-image ultp-block-image-zoomIn\"><a href=\"https://stpaulreporter.com/st-thomas-women-s-basketball-secures-road-win-over-north-dakota/\"><img alt=\"Ruth Sinn, Head Coach at St. Thomas Tommies Women's Basketball\" decoding=\"async\" src=\"https://d33ioocfz0fzi4.cloudfront.net/jns-media/f2/6f/27696336/webp_u2s5tpulm0i62td4fdnfqaww6rvz.webp\" srcset=\"\"/></a><div class=\"ultp-category-img-grid\"><div class=\"ultp-category-grid ultp-category-classic ultp-category-bottomLeft\"><div class=\"ultp-category-in\"><a class=\"ultp-cat-sports\" href=\"https://stpaulreporter.com/category/sports/\">Sports</a></div></div></div></div><div class=\"ultp-block-content\"><h3 class=\"ultp-block-title\"><a href=\"https://stpaulreporter.com/st-thomas-women-s-basketball-secures-road-win-over-north-dakota/\">St. Thomas women\u2019s basketball secures road win over North Dakota</a></h3><div class=\"ultp-block-meta ultp-block-meta-verticalbar ultp-block-meta-noIcon\"></div><div class=\"ultp-block-excerpt\"><p>The St. Thomas women\u2019s basketball team ended its road trip with a 70-58 win over North Dakota on Saturday at the Betty Engelstad Sioux Center in Grand Forks, North Dakota.</p>\n</div></div></div></div>"
+    ],
+    ".ultp-block-media": [
+      "<div class=\"ultp-block-item ultp-block-media post-id-202956\"><div class=\"ultp-block-content-wrap ultp-first-postlist-2\"><div class=\"ultp-block-image ultp-block-image-zoomIn\"><a href=\"https://stpaulreporter.com/st-thomas-women-s-basketball-secures-road-win-over-north-dakota/\"><img alt=\"Ruth Sinn, Head Coach at St. Thomas Tommies Women's Basketball\" decoding=\"async\" src=\"https://d33ioocfz0fzi4.cloudfront.net/jns-media/f2/6f/27696336/webp_u2s5tpulm0i62td4fdnfqaww6rvz.webp\" srcset=\"\"/></a><div class=\"ultp-category-img-grid\"><div class=\"ultp-category-grid ultp-category-classic ultp-category-bottomLeft\"><div class=\"ultp-category-in\"><a class=\"ultp-cat-sports\" href=\"https://stpaulreporter.com/category/sports/\">Sports</a></div></div></div></div><div class=\"ultp-block-content\"><h3 class=\"ultp-block-title\"><a href=\"https://stpaulreporter.com/st-thomas-women-s-basketball-secures-road-win-over-north-dakota/\">St. Thomas women\u2019s basketball secures road win over North Dakota</a></h3><div class=\"ultp-block-meta ultp-block-meta-verticalbar ultp-block-meta-noIcon\"></div><div class=\"ultp-block-excerpt\"><p>The St. Thomas women\u2019s basketball team ended its road trip with a 70-58 win over North Dakota on Saturday at the Betty Engelstad Sioux Center in Grand Forks, North Dakota.</p>\n</div></div></div></div>"
+    ]
+  },
+  "next_page_examples": {},
+  "title_selectors": [
+    ".ultp-block-title",
+    "h3.ultp-block-title"
+  ],
+  "title_examples": {
+    ".ultp-block-title": [
+      "<h3 class=\"ultp-block-title\"><a href=\"https://stpaulreporter.com/st-thomas-women-s-basketball-secures-road-win-over-north-dakota/\">St. Thomas women\u2019s basketball secures road win over North Dakota</a></h3>"
+    ],
+    "h3.ultp-block-title": [
+      "<h3 class=\"ultp-block-title\"><a href=\"https://stpaulreporter.com/st-thomas-women-s-basketball-secures-road-win-over-north-dakota/\">St. Thomas women\u2019s basketball secures road win over North Dakota</a></h3>"
+    ]
+  },
+  "date_selectors": [],
+  "date_examples": {},
+  "url_selectors": [
+    "h3.ultp-block-title a",
+    ".ultp-block-content-wrap a"
+  ],
+  "url_examples": {
+    "h3.ultp-block-title a": [
+      "<a href=\"https://stpaulreporter.com/st-thomas-women-s-basketball-secures-road-win-over-north-dakota/\">St. Thomas women\u2019s basketball secures road win over North Dakota</a>"
+    ],
+    ".ultp-block-content-wrap a": [
+      "<a href=\"https://stpaulreporter.com/st-thomas-women-s-basketball-secures-road-win-over-north-dakota/\"><img alt=\"Ruth Sinn, Head Coach at St. Thomas Tommies Women's Basketball\" decoding=\"async\" src=\"https://d33ioocfz0fzi4.cloudfront.net/jns-media/f2/6f/27696336/webp_u2s5tpulm0i62td4fdnfqaww6rvz.webp\" srcset=\"\"/></a>"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+    "name": "NewsBreak Minneapolis",
+    "scrapers": [
+        {
+            "path": "scrapers.newsbreak_minneapolis.scraper",
+            "url": "https://www.newsbreak.com/minneapolis-mn"
+        }
+    ]
+}

@@ -1,0 +1,86 @@
+{
+  "item_selectors": [
+    "ul.dcr-1ydzu3d li.dcr-11dhrb2",
+    "ul.dcr-1ydzu3d li.dcr-1efae0v",
+    "ul.dcr-1ydzu3d > li"
+  ],
+  "next_page_selectors": [
+    "a.dcr-jh1m5g",
+    "a[href*=\"?page=\"]",
+    "a.dcr-1nzqxjn"
+  ],
+  "item_examples": {
+    "ul.dcr-1ydzu3d li.dcr-11dhrb2": [
+      "<li class=\"dcr-11dhrb2\"><div class=\"dcr-1mi4su5\" data-format-design=\"10\" data-format-display=\"0\" data-format-theme=\"0\"><div class=\"dcr-1o2xgdn\"><a aria-label=\"How a Minneapolis childcare center survived the ICE surge \u2013 and is moving forward\" class=\"dcr-2yd10d\" data-link-name=\"feature | group-0 | card-@1 | media-picture\" href=\"/us-news/2026/mar/20/minneapolis-childcare-center-ice-immigrants\"></a><div class=\"dcr-1atd576\" style=\"background-color:var(--card-background);row-gap:8px\"><div class=\"dcr-1uwffoc\"><picture class=\"dcr-1ydxyte\" data-size=\"small\"><source media=\"(min-width: 980px) and (-webkit-min-device-pixel-ratio: 1.25), (min-width: 980px) and (min-resolution: 120dpi)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=220&amp;dpr=2&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 980px)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=220&amp;dpr=1&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 740px) and (-webkit-min-device-pixel-ratio: 1.25), (min-width: 740px) and (min-resolution: 120dpi)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=160&amp;dpr=2&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 740px)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=160&amp;dpr=1&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 320px) and (-webkit-min-device-pixel-ratio: 1.25), (min-width: 320px) and (min-resolution: 120dpi)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=120&amp;dpr=2&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 320px)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=120&amp;dpr=1&amp;s=none&amp;crop=5%3A4\"/..."
+    ],
+    "ul.dcr-1ydzu3d li.dcr-1efae0v": [
+      "<li class=\"dcr-1efae0v\"><div class=\"dcr-1mi4su5\" data-format-design=\"10\" data-format-display=\"0\" data-format-theme=\"0\"><div class=\"dcr-1o2xgdn\"><a aria-label=\"\u2018Will this fracture last a generation?\u2019 \u2013 your ICE crackdown questions answered\" class=\"dcr-2yd10d\" data-link-name=\"feature | group-0 | card-@2 | media-picture\" href=\"/us-news/2026/mar/19/reader-qa-post-your-questions-for-us-ice-immigration-reporter-maanvi-singh\"></a><div class=\"dcr-1atd576\" style=\"background-color:var(--card-background);row-gap:8px\"><div class=\"dcr-1uwffoc\"><picture class=\"dcr-1ydxyte\" data-size=\"small\"><source media=\"(min-width: 980px) and (-webkit-min-device-pixel-ratio: 1.25), (min-width: 980px) and (min-resolution: 120dpi)\" srcset=\"https://i.guim.co.uk/img/media/593fd852ef87cfe17dd8877b52923b25545ea6e6/0_0_5000_4000/master/5000.jpg?width=220&amp;dpr=2&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 980px)\" srcset=\"https://i.guim.co.uk/img/media/593fd852ef87cfe17dd8877b52923b25545ea6e6/0_0_5000_4000/master/5000.jpg?width=220&amp;dpr=1&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 740px) and (-webkit-min-device-pixel-ratio: 1.25), (min-width: 740px) and (min-resolution: 120dpi)\" srcset=\"https://i.guim.co.uk/img/media/593fd852ef87cfe17dd8877b52923b25545ea6e6/0_0_5000_4000/master/5000.jpg?width=160&amp;dpr=2&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 740px)\" srcset=\"https://i.guim.co.uk/img/media/593fd852ef87cfe17dd8877b52923b25545ea6e6/0_0_5000_4000/master/5000.jpg?width=160&amp;dpr=1&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 320px) and (-webkit-min-device-pixel-ratio: 1.25), (min-width: 320px) and (min-resolution: 120dpi)\" srcset=\"https://i.guim.co.uk/img/media/593fd852ef87cfe17dd8877b52923b25545ea6e6/0_0_5000_4000/master/5000.jpg?width=120&amp;dpr=2&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 320px)\" srcset=\"https://i.guim.co.uk/img/media/593fd852ef87cfe17dd8877b52923b25545ea6e6/0_0_5000_4000/master/5000.jpg?width=120&amp;dpr=1&amp;s=none..."
+    ],
+    "ul.dcr-1ydzu3d > li": [
+      "<li class=\"dcr-11dhrb2\"><div class=\"dcr-1mi4su5\" data-format-design=\"10\" data-format-display=\"0\" data-format-theme=\"0\"><div class=\"dcr-1o2xgdn\"><a aria-label=\"How a Minneapolis childcare center survived the ICE surge \u2013 and is moving forward\" class=\"dcr-2yd10d\" data-link-name=\"feature | group-0 | card-@1 | media-picture\" href=\"/us-news/2026/mar/20/minneapolis-childcare-center-ice-immigrants\"></a><div class=\"dcr-1atd576\" style=\"background-color:var(--card-background);row-gap:8px\"><div class=\"dcr-1uwffoc\"><picture class=\"dcr-1ydxyte\" data-size=\"small\"><source media=\"(min-width: 980px) and (-webkit-min-device-pixel-ratio: 1.25), (min-width: 980px) and (min-resolution: 120dpi)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=220&amp;dpr=2&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 980px)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=220&amp;dpr=1&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 740px) and (-webkit-min-device-pixel-ratio: 1.25), (min-width: 740px) and (min-resolution: 120dpi)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=160&amp;dpr=2&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 740px)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=160&amp;dpr=1&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 320px) and (-webkit-min-device-pixel-ratio: 1.25), (min-width: 320px) and (min-resolution: 120dpi)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=120&amp;dpr=2&amp;s=none&amp;crop=5%3A4\"/><source media=\"(min-width: 320px)\" srcset=\"https://i.guim.co.uk/img/media/6ccb2750887f1521007689a823445ca23781abff/250_0_2501_2000/master/2501.jpg?width=120&amp;dpr=1&amp;s=none&amp;crop=5%3A4\"/..."
+    ]
+  },
+  "next_page_examples": {
+    "a.dcr-jh1m5g": [
+      "<a class=\"dcr-jh1m5g\" href=\"/us-news/minneapolis?page=2\"><svg aria-hidden=\"true\" focusable=\"false\" viewbox=\"-3 -3 30 30\" xmlns=\"http://www.w3.org/2000/svg\"><path clip-rule=\"evenodd\" d=\"m8.482 1-.982.957L15.882 12 7.5 22.044l.982.956 10.471-10.471V11.47z\" fill-rule=\"evenodd\"></path></svg></a>"
+    ],
+    "a[href*=\"?page=\"]": [
+      "<a class=\"dcr-1nzqxjn\" href=\"/us-news/minneapolis?page=2\">2</a>"
+    ],
+    "a.dcr-1nzqxjn": [
+      "<a class=\"dcr-1nzqxjn\" href=\"/us-news/minneapolis?page=2\">2</a>"
+    ]
+  },
+  "title_selectors": [
+    "h3.dcr-dp7xvd",
+    ".show-underline.headline-text",
+    "h3.dcr-12xnchl",
+    "h3.card-headline"
+  ],
+  "title_examples": {
+    "h3.dcr-dp7xvd": [
+      "<h3 class=\"card-headline dcr-dp7xvd\"><div class=\"dcr-1cc5b8d\" style=\"color:var(--card-kicker-text);background-color:transparent\">Building power</div><span class=\"show-underline headline-text dcr-uyefka\">\u2018One of the last places of safety\u2019: US tenants are striking against their landlords over steep rent hikes</span></h3>"
+    ],
+    ".show-underline.headline-text": [
+      "<span class=\"show-underline headline-text dcr-uyefka\">How a Minneapolis childcare center survived the ICE surge \u2013 and is moving forward</span>"
+    ],
+    "h3.dcr-12xnchl": [
+      "<h3 class=\"card-headline dcr-12xnchl\"><span class=\"show-underline headline-text dcr-uyefka\">How a Minneapolis childcare center survived the ICE surge \u2013 and is moving forward</span></h3>"
+    ],
+    "h3.card-headline": [
+      "<h3 class=\"card-headline dcr-12xnchl\"><span class=\"show-underline headline-text dcr-uyefka\">How a Minneapolis childcare center survived the ICE surge \u2013 and is moving forward</span></h3>"
+    ]
+  },
+  "date_selectors": [
+    "footer.dcr-x3nolh time",
+    ".dcr-147a5s0 + footer .dcr-8fifzy",
+    "footer.dcr-x3nolh .dcr-8fifzy"
+  ],
+  "date_examples": {
+    "footer.dcr-x3nolh time": [
+      "<time data-locale=\"en-us\" datetime=\"2026-03-20T11:00:35.000Z\" title=\"Friday, March 20, 2026 at 07:00 AM Eastern Daylight Time\">07.00 EDT</time>"
+    ],
+    ".dcr-147a5s0 + footer .dcr-8fifzy": [
+      "<span class=\"dcr-8fifzy\"><time data-locale=\"en-us\" datetime=\"2026-03-20T11:00:35.000Z\" title=\"Friday, March 20, 2026 at 07:00 AM Eastern Daylight Time\">07.00 EDT</time></span>"
+    ],
+    "footer.dcr-x3nolh .dcr-8fifzy": [
+      "<span class=\"dcr-8fifzy\"><time data-locale=\"en-us\" datetime=\"2026-03-20T11:00:35.000Z\" title=\"Friday, March 20, 2026 at 07:00 AM Eastern Daylight Time\">07.00 EDT</time></span>"
+    ]
+  },
+  "url_selectors": [
+    "a[href*=\"/us-news/\"]",
+    "a.dcr-2yd10d",
+    "ul.dcr-1ydzu3d a[aria-label]"
+  ],
+  "url_examples": {
+    "a[href*=\"/us-news/\"]": [
+      "<a class=\"selectableMenuItem dcr-1julzi7\" data-link-name=\"header : secondary : US politics\" data-testid=\"column-collapse-sublink-US politics\" href=\"/us-news/us-politics\" role=\"menuitem\" tabindex=\"-1\">US politics</a>"
+    ],
+    "a.dcr-2yd10d": [
+      "<a aria-label=\"How a Minneapolis childcare center survived the ICE surge \u2013 and is moving forward\" class=\"dcr-2yd10d\" data-link-name=\"feature | group-0 | card-@1 | media-picture\" href=\"/us-news/2026/mar/20/minneapolis-childcare-center-ice-immigrants\"></a>"
+    ],
+    "ul.dcr-1ydzu3d a[aria-label]": [
+      "<a aria-label=\"How a Minneapolis childcare center survived the ICE surge \u2013 and is moving forward\" class=\"dcr-2yd10d\" data-link-name=\"feature | group-0 | card-@1 | media-picture\" href=\"/us-news/2026/mar/20/minneapolis-childcare-center-ice-immigrants\"></a>"
+    ]
+  }
+}

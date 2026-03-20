@@ -1,0 +1,9 @@
+{
+    "name": "The Guardian Minneapolis",
+    "scrapers": [
+        {
+            "path": "scrapers.the_guardian_minneapolis.scraper",
+            "url": "https://www.theguardian.com/us-news/minneapolis"
+        }
+    ]
+}

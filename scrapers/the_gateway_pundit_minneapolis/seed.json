@@ -1,0 +1,9 @@
+{
+    "name": "The Gateway Pundit Minneapolis",
+    "scrapers": [
+        {
+            "path": "scrapers.the_gateway_pundit_minneapolis.scraper",
+            "url": "https://www.thegatewaypundit.com/?s=minneapolis"
+        }
+    ]
+}

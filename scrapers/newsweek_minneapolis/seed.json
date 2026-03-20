@@ -1,0 +1,9 @@
+{
+    "name": "Newsweek Minneapolis",
+    "scrapers": [
+        {
+            "path": "scrapers.newsweek_minneapolis.scraper",
+            "url": "https://search.newsweek.com/?q=minneapolis&sort=date"
+        }
+    ]
+}

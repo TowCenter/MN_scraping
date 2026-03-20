@@ -1,0 +1,9 @@
+{
+    "name": "St Paul Reporter",
+    "scrapers": [
+        {
+            "path": "scrapers.st_paul_reporter.scraper",
+            "url": "https://stpaulreporter.com"
+        }
+    ]
+}

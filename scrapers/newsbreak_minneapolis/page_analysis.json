@@ -1,0 +1,54 @@
+{
+  "item_selectors": [
+    "section.my-1",
+    "section.my-1.md\\:my-2"
+  ],
+  "next_page_selectors": [
+    "a[href*=\"?page=\"]"
+  ],
+  "item_examples": {
+    "section.my-1": [
+      "<section class=\"my-1 md:my-2 p-4 mx-[-16px] md:hover:bg-black/5 rounded-lg transitionl-[background] duration-100\"><a aria-label=\"/news/4549481410678-james-a-ortley-manidoo-inini-spirit-man\" href=\"/news/4549481410678-james-a-ortley-manidoo-inini-spirit-man\" target=\"_blank\" title=\"redlakenationnews.com\"><div class=\"flex gap-2 w-full\"><div><div class=\"text-gray-light h-9\" style=\"font-size:36px;margin-left:-3px\"><svg fill=\"currentColor\" height=\"1em\" stroke=\"currentColor\" stroke-width=\"0\" viewbox=\"0 0 24 24\" width=\"1em\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zM4 12c0-.899.156-1.762.431-2.569L6 11l2 2v2l2 2 1 1v1.931C7.061 19.436 4 16.072 4 12zm14.33 4.873C17.677 16.347 16.687 16 16 16v-1a2 2 0 0 0-2-2h-4v-3a2 2 0 0 0 2-2V7h1a2 2 0 0 0 2-2v-.411C17.928 5.778 20 8.65 20 12a7.947 7.947 0 0 1-1.67 4.873z\"></path></svg></div></div><div class=\"w-full flex justify-between items-center\"><div class=\"overflow-hidden\"><div class=\"flex items-center gap-2\"><h4 class=\"text-black/85 text-sm tracking-[-0.015px] font-semibold textoverflow flex-shrink\">redlakenationnews.com</h4></div><div class=\"text-black/60 text-xs\">website</div></div><div class=\"cursor-pointer text-base font-medium h-fit\"></div></div></div></a><section class=\"flex flex-row items-start my-1\"><div class=\"flex-1 mr-3\"><a aria-label=\"/news/4549481410678-james-a-ortley-manidoo-inini-spirit-man\" href=\"/news/4549481410678-james-a-ortley-manidoo-inini-spirit-man\" target=\"_blank\"><h3 class=\"text-xl leading-[30px] tracking-[0.15px] font-bold break-words textoverflow-2\">James A. Ortley \u2013 Manidoo Inini \"Spirit Man\"</h3><p class=\"text-base tracking-[0.38px] mt-2 break-words text-gray-light textoverflow-2\">June 4, 1974 - February 25, 2026. James Allen Ortley Manidoo Inini \u2013 \u201cSpirit Man\u201d was born June 4, 1974 and passed away on February 25, 2026 in Minneapolis, MN at the age of 51. James was born the son of Duane Axdahl and Leona Ortley on...</p></a><div class..."
+    ],
+    "section.my-1.md\\:my-2": [
+      "<section class=\"my-1 md:my-2 p-4 mx-[-16px] md:hover:bg-black/5 rounded-lg transitionl-[background] duration-100\"><a aria-label=\"/news/4549481410678-james-a-ortley-manidoo-inini-spirit-man\" href=\"/news/4549481410678-james-a-ortley-manidoo-inini-spirit-man\" target=\"_blank\" title=\"redlakenationnews.com\"><div class=\"flex gap-2 w-full\"><div><div class=\"text-gray-light h-9\" style=\"font-size:36px;margin-left:-3px\"><svg fill=\"currentColor\" height=\"1em\" stroke=\"currentColor\" stroke-width=\"0\" viewbox=\"0 0 24 24\" width=\"1em\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zM4 12c0-.899.156-1.762.431-2.569L6 11l2 2v2l2 2 1 1v1.931C7.061 19.436 4 16.072 4 12zm14.33 4.873C17.677 16.347 16.687 16 16 16v-1a2 2 0 0 0-2-2h-4v-3a2 2 0 0 0 2-2V7h1a2 2 0 0 0 2-2v-.411C17.928 5.778 20 8.65 20 12a7.947 7.947 0 0 1-1.67 4.873z\"></path></svg></div></div><div class=\"w-full flex justify-between items-center\"><div class=\"overflow-hidden\"><div class=\"flex items-center gap-2\"><h4 class=\"text-black/85 text-sm tracking-[-0.015px] font-semibold textoverflow flex-shrink\">redlakenationnews.com</h4></div><div class=\"text-black/60 text-xs\">website</div></div><div class=\"cursor-pointer text-base font-medium h-fit\"></div></div></div></a><section class=\"flex flex-row items-start my-1\"><div class=\"flex-1 mr-3\"><a aria-label=\"/news/4549481410678-james-a-ortley-manidoo-inini-spirit-man\" href=\"/news/4549481410678-james-a-ortley-manidoo-inini-spirit-man\" target=\"_blank\"><h3 class=\"text-xl leading-[30px] tracking-[0.15px] font-bold break-words textoverflow-2\">James A. Ortley \u2013 Manidoo Inini \"Spirit Man\"</h3><p class=\"text-base tracking-[0.38px] mt-2 break-words text-gray-light textoverflow-2\">June 4, 1974 - February 25, 2026. James Allen Ortley Manidoo Inini \u2013 \u201cSpirit Man\u201d was born June 4, 1974 and passed away on February 25, 2026 in Minneapolis, MN at the age of 51. James was born the son of Duane Axdahl and Leona Ortley on...</p></a><div class..."
+    ]
+  },
+  "next_page_examples": {
+    "a[href*=\"?page=\"]": [
+      "<a href=\"/minneapolis-mn?page=2\">Next Page</a>"
+    ]
+  },
+  "title_selectors": [
+    "h3.text-xl",
+    "h3.text-xl.textoverflow-2"
+  ],
+  "title_examples": {
+    "h3.text-xl": [
+      "<h3 class=\"text-xl leading-[30px] tracking-[0.15px] font-bold break-words textoverflow-2\">James A. Ortley \u2013 Manidoo Inini \"Spirit Man\"</h3>"
+    ],
+    "h3.text-xl.textoverflow-2": [
+      "<h3 class=\"text-xl leading-[30px] tracking-[0.15px] font-bold break-words textoverflow-2\">James A. Ortley \u2013 Manidoo Inini \"Spirit Man\"</h3>"
+    ]
+  },
+  "date_selectors": [
+    "div.text-gray-light.text-sm"
+  ],
+  "date_examples": {
+    "div.text-gray-light.text-sm": [
+      "<div class=\"flex flex-row items-center space-x-2 text-gray-light text-sm my-4\"><a aria-label=\"Minneapolis, Minnesota\" class=\"flex items-center hover:text-[#017ef9]\" href=\"/minneapolis-mn\" target=\"_blank\"><svg class=\"w-4 h-4 mr-[3px]\" fill=\"none\" height=\"24\" viewbox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path clip-rule=\"evenodd\" d=\"M11.5 5.25C9.70508 5.25 8.25 6.70507 8.25 8.5C8.25 10.2949 9.70508 11.75 11.5 11.75C13.2949 11.75 14.75 10.2949 14.75 8.5C14.75 6.70507 13.2949 5.25 11.5 5.25ZM9.75 8.5C9.75 7.5335 10.5335 6.75 11.5 6.75C12.4665 6.75 13.25 7.5335 13.25 8.5C13.25 9.4665 12.4665 10.25 11.5 10.25C10.5335 10.25 9.75 9.4665 9.75 8.5Z\" fill=\"currentColor\" fill-rule=\"evenodd\"></path><path clip-rule=\"evenodd\" d=\"M3.23648 7.57808C5.18002 -1.20004 17.8303 -1.18868 19.7637 7.58809C20.8837 12.6713 17.7951 16.8911 15.27 19.3824L15.2093 19.4423C14.4446 20.1969 13.823 20.8102 13.2918 21.2311C12.7509 21.6596 12.1738 21.9979 11.5013 22C10.8278 22.0021 10.2488 21.6666 9.7054 21.2377C9.15972 20.807 8.51989 20.1734 7.72774 19.389L7.72005 19.3814C5.20426 16.8903 2.11662 12.6607 3.23648 7.57808ZM4.74572 7.90809C6.33291 0.741035 16.6751 0.748211 18.2542 7.91687C19.1951 12.1873 16.6207 15.8852 14.1816 18.2916C13.3614 19.1009 12.792 19.6623 12.3289 20.0293C11.8614 20.3996 11.6315 20.463 11.4964 20.4634C11.3624 20.4638 11.1332 20.4028 10.6661 20.0341C10.203 19.6686 9.63212 19.1063 8.81045 18.2926C6.38008 15.886 3.8049 12.179 4.74572 7.90809Z\" fill=\"currentColor\" fill-rule=\"evenodd\"></path></svg> <!-- -->Minneapolis<!-- -->, MN<!-- -->\u00a0\u00b7\u00a0</a>12h</div>"
+    ]
+  },
+  "url_selectors": [
+    "a[href^=\"/m/\"]",
+    "a[href^=\"/news/\"]"
+  ],
+  "url_examples": {
+    "a[href^=\"/m/\"]": [
+      "<a aria-label=\"/m/sasquatch-92-1-fm-520668\" href=\"/m/sasquatch-92-1-fm-520668\" target=\"_blank\" title=\"Sasquatch 92.1 FM\"><div class=\"flex gap-2 w-full\"><div><picture class=\"jsx-38949707 picture w-9 h-9\" style=\"border-radius: 50px;\"><source class=\"jsx-38949707\" srcset=\"https://img.particlenews.com/image.php?type=webp_60x60&amp;url=https%3A%2F%2Fi.prt.news%2F92125d14408fba24de623a81901a69cd.png\" type=\"image/webp\"/><img alt=\"avatar img\" class=\"jsx-38949707 w-9 h-9\" src=\"https://img.particlenews.com/image.php?type=thumbnail_60x60&amp;url=https%3A%2F%2Fi.prt.news%2F92125d14408fba24de623a81901a69cd.png\" style=\"border-radius: 50px;\" title=\"\"/></picture></div><div class=\"w-full flex justify-between items-center\"><div class=\"overflow-hidden\"><div class=\"flex items-center gap-2\"><h4 class=\"text-black/85 text-sm tracking-[-0.015px] font-semibold textoverflow flex-shrink\">Sasquatch 92.1 FM</h4><picture class=\"jsx-38949707 picture w-4 h-4\" style=\"border-radius: 50px;\"><source class=\"jsx-38949707\" srcset=\"https://img.particlenews.com/image.php?type=webp_144x144&amp;url=https%3A%2F%2Fi.prt.news%2F1f1a776abd0afd58e4fa1631651f61f2.png\" type=\"image/webp\"/><img alt=\"A Partner Publisher is an established news or content publisher, such as a newspaper, magazine, website, news channel, and news agency, who has a formal partnership account with NewsBreak and curates their own content.\" class=\"jsx-38949707 w-4 h-4\" src=\"https://img.particlenews.com/image.php?type=thumbnail_144x144&amp;url=https%3A%2F%2Fi.prt.news%2F1f1a776abd0afd58e4fa1631651f61f2.png\" style=\"border-radius: 50px;\" title=\"\"/></picture></div><div class=\"text-black/60 text-xs\">partner publisher<!-- -->\u00a0\u00b7\u00a0<!-- -->6.6K<!-- --> followers</div></div><div class=\"cursor-pointer text-base font-medium h-fit\"></div></div></div></a>"
+    ],
+    "a[href^=\"/news/\"]": [
+      "<a aria-label=\"/news/4549481410678-james-a-ortley-manidoo-inini-spirit-man\" href=\"/news/4549481410678-james-a-ortley-manidoo-inini-spirit-man\" target=\"_blank\" title=\"redlakenationnews.com\"><div class=\"flex gap-2 w-full\"><div><div class=\"text-gray-light h-9\" style=\"font-size:36px;margin-left:-3px\"><svg fill=\"currentColor\" height=\"1em\" stroke=\"currentColor\" stroke-width=\"0\" viewbox=\"0 0 24 24\" width=\"1em\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zM4 12c0-.899.156-1.762.431-2.569L6 11l2 2v2l2 2 1 1v1.931C7.061 19.436 4 16.072 4 12zm14.33 4.873C17.677 16.347 16.687 16 16 16v-1a2 2 0 0 0-2-2h-4v-3a2 2 0 0 0 2-2V7h1a2 2 0 0 0 2-2v-.411C17.928 5.778 20 8.65 20 12a7.947 7.947 0 0 1-1.67 4.873z\"></path></svg></div></div><div class=\"w-full flex justify-between items-center\"><div class=\"overflow-hidden\"><div class=\"flex items-center gap-2\"><h4 class=\"text-black/85 text-sm tracking-[-0.015px] font-semibold textoverflow flex-shrink\">redlakenationnews.com</h4></div><div class=\"text-black/60 text-xs\">website</div></div><div class=\"cursor-pointer text-base font-medium h-fit\"></div></div></div></a>"
+    ]
+  }
+}

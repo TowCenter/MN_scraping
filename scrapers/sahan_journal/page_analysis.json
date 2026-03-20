@@ -1,0 +1,70 @@
+{
+  "item_selectors": [
+    "article.post.type-post",
+    "article.post",
+    "article.hentry"
+  ],
+  "next_page_selectors": [
+    "a.next.page-numbers",
+    "nav.navigation.pagination"
+  ],
+  "item_examples": {
+    "article.post.type-post": [
+      "<article class=\"post-82169 post type-post status-publish format-standard has-post-thumbnail hentry category-arts-culture tag-hmong tag-things-to-do tag-university-of-minnesota tag-vietnamese tag-walker-arts tag-weekend-arts tag-weekend-arts-guide entry\" id=\"post-82169\">\n<figure class=\"post-thumbnail\">\n<a aria-hidden=\"true\" class=\"post-thumbnail-inner\" href=\"https://sahanjournal.com/arts-culture/twin-cities-things-to-do-walker-dance-rondo-exchange-hmong-vietnamese-art/\" tabindex=\"-1\">\n<img alt=\"\" class=\"attachment-newspack-archive-image-large size-newspack-archive-image-large wp-post-image\" data-attachment-id=\"82163\" data-comments-opened=\"0\" data-hero-candidate=\"1\" data-image-caption=\"&lt;p&gt;&amp;#8220;Will there be hope after all,&amp;#8221; a 2024 woodcut print by Vietnamese artist Mai Tran shows a Ly dragon appearing over the Land of Ten Thousand Lakes.&lt;/p&gt;\n\" data-image-description=\"\" data-image-meta='{\"aperture\":\"0\",\"credit\":\"\",\"camera\":\"\",\"caption\":\"\",\"created_timestamp\":\"0\",\"copyright\":\"\",\"focal_length\":\"0\",\"iso\":\"0\",\"shutter_speed\":\"0\",\"title\":\"\",\"orientation\":\"1\"}' data-image-title=\"Weekend arts March 20-22\" data-large-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=780%2C520&amp;ssl=1\" data-medium-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=300%2C200&amp;ssl=1\" data-orig-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=1800%2C1200&amp;ssl=1\" data-orig-size=\"1800,1200\" data-permalink=\"https://sahanjournal.com/elsewhere1/\" decoding=\"async\" fetchpriority=\"high\" height=\"900\" sizes=\"(max-width: 34.9rem) calc(100vw - 2rem), (max-width: 53rem) calc(8 * (100vw / 12)), (min-width: 53rem) calc(6 * (100vw / 12)), 100vw\" src=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?resize=1200%2C900&amp;ssl=1\" srcset=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?resize=1200%2C900&amp;ssl=1 120..."
+    ],
+    "article.post": [
+      "<article class=\"post-82169 post type-post status-publish format-standard has-post-thumbnail hentry category-arts-culture tag-hmong tag-things-to-do tag-university-of-minnesota tag-vietnamese tag-walker-arts tag-weekend-arts tag-weekend-arts-guide entry\" id=\"post-82169\">\n<figure class=\"post-thumbnail\">\n<a aria-hidden=\"true\" class=\"post-thumbnail-inner\" href=\"https://sahanjournal.com/arts-culture/twin-cities-things-to-do-walker-dance-rondo-exchange-hmong-vietnamese-art/\" tabindex=\"-1\">\n<img alt=\"\" class=\"attachment-newspack-archive-image-large size-newspack-archive-image-large wp-post-image\" data-attachment-id=\"82163\" data-comments-opened=\"0\" data-hero-candidate=\"1\" data-image-caption=\"&lt;p&gt;&amp;#8220;Will there be hope after all,&amp;#8221; a 2024 woodcut print by Vietnamese artist Mai Tran shows a Ly dragon appearing over the Land of Ten Thousand Lakes.&lt;/p&gt;\n\" data-image-description=\"\" data-image-meta='{\"aperture\":\"0\",\"credit\":\"\",\"camera\":\"\",\"caption\":\"\",\"created_timestamp\":\"0\",\"copyright\":\"\",\"focal_length\":\"0\",\"iso\":\"0\",\"shutter_speed\":\"0\",\"title\":\"\",\"orientation\":\"1\"}' data-image-title=\"Weekend arts March 20-22\" data-large-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=780%2C520&amp;ssl=1\" data-medium-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=300%2C200&amp;ssl=1\" data-orig-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=1800%2C1200&amp;ssl=1\" data-orig-size=\"1800,1200\" data-permalink=\"https://sahanjournal.com/elsewhere1/\" decoding=\"async\" fetchpriority=\"high\" height=\"900\" sizes=\"(max-width: 34.9rem) calc(100vw - 2rem), (max-width: 53rem) calc(8 * (100vw / 12)), (min-width: 53rem) calc(6 * (100vw / 12)), 100vw\" src=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?resize=1200%2C900&amp;ssl=1\" srcset=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?resize=1200%2C900&amp;ssl=1 120..."
+    ],
+    "article.hentry": [
+      "<article class=\"post-82169 post type-post status-publish format-standard has-post-thumbnail hentry category-arts-culture tag-hmong tag-things-to-do tag-university-of-minnesota tag-vietnamese tag-walker-arts tag-weekend-arts tag-weekend-arts-guide entry\" id=\"post-82169\">\n<figure class=\"post-thumbnail\">\n<a aria-hidden=\"true\" class=\"post-thumbnail-inner\" href=\"https://sahanjournal.com/arts-culture/twin-cities-things-to-do-walker-dance-rondo-exchange-hmong-vietnamese-art/\" tabindex=\"-1\">\n<img alt=\"\" class=\"attachment-newspack-archive-image-large size-newspack-archive-image-large wp-post-image\" data-attachment-id=\"82163\" data-comments-opened=\"0\" data-hero-candidate=\"1\" data-image-caption=\"&lt;p&gt;&amp;#8220;Will there be hope after all,&amp;#8221; a 2024 woodcut print by Vietnamese artist Mai Tran shows a Ly dragon appearing over the Land of Ten Thousand Lakes.&lt;/p&gt;\n\" data-image-description=\"\" data-image-meta='{\"aperture\":\"0\",\"credit\":\"\",\"camera\":\"\",\"caption\":\"\",\"created_timestamp\":\"0\",\"copyright\":\"\",\"focal_length\":\"0\",\"iso\":\"0\",\"shutter_speed\":\"0\",\"title\":\"\",\"orientation\":\"1\"}' data-image-title=\"Weekend arts March 20-22\" data-large-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=780%2C520&amp;ssl=1\" data-medium-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=300%2C200&amp;ssl=1\" data-orig-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=1800%2C1200&amp;ssl=1\" data-orig-size=\"1800,1200\" data-permalink=\"https://sahanjournal.com/elsewhere1/\" decoding=\"async\" fetchpriority=\"high\" height=\"900\" sizes=\"(max-width: 34.9rem) calc(100vw - 2rem), (max-width: 53rem) calc(8 * (100vw / 12)), (min-width: 53rem) calc(6 * (100vw / 12)), 100vw\" src=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?resize=1200%2C900&amp;ssl=1\" srcset=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?resize=1200%2C900&amp;ssl=1 120..."
+    ]
+  },
+  "next_page_examples": {
+    "a.next.page-numbers": [
+      "<a class=\"next page-numbers\" href=\"https://sahanjournal.com/archive/page/2/\"><span class=\"nav-next-text\">Older posts</span> <svg aria-hidden=\"true\" class=\"svg-icon\" focusable=\"false\" height=\"22\" role=\"img\" viewbox=\"0 0 24 24\" width=\"22\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z\"></path><path d=\"M0 0h24v24H0z\" fill=\"none\"></path></svg></a>"
+    ],
+    "nav.navigation.pagination": [
+      "<nav aria-label=\"Posts pagination\" class=\"navigation pagination\">\n<h2 class=\"screen-reader-text\">Posts pagination</h2>\n<div class=\"nav-links\"><span aria-current=\"page\" aria-label=\"Page 1\" class=\"page-numbers current\">1</span>\n<a aria-label=\"Page 2\" class=\"page-numbers\" href=\"https://sahanjournal.com/archive/page/2/\">2</a>\n<a aria-label=\"Page 3\" class=\"page-numbers\" href=\"https://sahanjournal.com/archive/page/3/\">3</a>\n<span class=\"page-numbers dots\">\u2026</span>\n<a aria-label=\"Page 40\" class=\"page-numbers\" href=\"https://sahanjournal.com/archive/page/40/\">40</a>\n<a class=\"next page-numbers\" href=\"https://sahanjournal.com/archive/page/2/\"><span class=\"nav-next-text\">Older posts</span> <svg aria-hidden=\"true\" class=\"svg-icon\" focusable=\"false\" height=\"22\" role=\"img\" viewbox=\"0 0 24 24\" width=\"22\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z\"></path><path d=\"M0 0h24v24H0z\" fill=\"none\"></path></svg></a></div>\n</nav>"
+    ]
+  },
+  "title_selectors": [
+    "h2.entry-title",
+    "h2.entry-title a"
+  ],
+  "title_examples": {
+    "h2.entry-title": [
+      "<h2 class=\"entry-title\"><a href=\"https://sahanjournal.com/arts-culture/twin-cities-things-to-do-walker-dance-rondo-exchange-hmong-vietnamese-art/\" rel=\"bookmark\">Vietnamese folklore meets Midwestern landscapes in playful University of Minnesota show</a></h2>"
+    ],
+    "h2.entry-title a": [
+      "<a href=\"https://sahanjournal.com/arts-culture/twin-cities-things-to-do-walker-dance-rondo-exchange-hmong-vietnamese-art/\" rel=\"bookmark\">Vietnamese folklore meets Midwestern landscapes in playful University of Minnesota show</a>"
+    ]
+  },
+  "date_selectors": [
+    ".posted-on",
+    "time.entry-date.published",
+    "time.entry-date.published.updated"
+  ],
+  "date_examples": {
+    ".posted-on": [
+      "<span class=\"posted-on\"><a href=\"https://sahanjournal.com/arts-culture/twin-cities-things-to-do-walker-dance-rondo-exchange-hmong-vietnamese-art/\" rel=\"bookmark\"><time class=\"entry-date published\" datetime=\"2026-03-20T06:00:00-05:00\">6 hours ago</time><time class=\"updated\" datetime=\"2026-03-20T11:45:20-05:00\">March 20, 2026</time></a></span>"
+    ],
+    "time.entry-date.published": [
+      "<time class=\"entry-date published\" datetime=\"2026-03-20T06:00:00-05:00\">6 hours ago</time>"
+    ],
+    "time.entry-date.published.updated": [
+      "<time class=\"entry-date published updated\" datetime=\"2026-03-18T06:00:00-05:00\">March 18, 2026</time>"
+    ]
+  },
+  "url_selectors": [
+    "a.post-thumbnail-inner",
+    "h2.entry-title a"
+  ],
+  "url_examples": {
+    "a.post-thumbnail-inner": [
+      "<a aria-hidden=\"true\" class=\"post-thumbnail-inner\" href=\"https://sahanjournal.com/arts-culture/twin-cities-things-to-do-walker-dance-rondo-exchange-hmong-vietnamese-art/\" tabindex=\"-1\">\n<img alt=\"\" class=\"attachment-newspack-archive-image-large size-newspack-archive-image-large wp-post-image\" data-attachment-id=\"82163\" data-comments-opened=\"0\" data-hero-candidate=\"1\" data-image-caption=\"&lt;p&gt;&amp;#8220;Will there be hope after all,&amp;#8221; a 2024 woodcut print by Vietnamese artist Mai Tran shows a Ly dragon appearing over the Land of Ten Thousand Lakes.&lt;/p&gt;\n\" data-image-description=\"\" data-image-meta='{\"aperture\":\"0\",\"credit\":\"\",\"camera\":\"\",\"caption\":\"\",\"created_timestamp\":\"0\",\"copyright\":\"\",\"focal_length\":\"0\",\"iso\":\"0\",\"shutter_speed\":\"0\",\"title\":\"\",\"orientation\":\"1\"}' data-image-title=\"Weekend arts March 20-22\" data-large-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=780%2C520&amp;ssl=1\" data-medium-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=300%2C200&amp;ssl=1\" data-orig-file=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?fit=1800%2C1200&amp;ssl=1\" data-orig-size=\"1800,1200\" data-permalink=\"https://sahanjournal.com/elsewhere1/\" decoding=\"async\" fetchpriority=\"high\" height=\"900\" sizes=\"(max-width: 34.9rem) calc(100vw - 2rem), (max-width: 53rem) calc(8 * (100vw / 12)), (min-width: 53rem) calc(6 * (100vw / 12)), 100vw\" src=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?resize=1200%2C900&amp;ssl=1\" srcset=\"https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?resize=1200%2C900&amp;ssl=1 1200w, https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?resize=800%2C600&amp;ssl=1 800w, https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?resize=600%2C450&amp;ssl=1 600w, https://i0.wp.com/sahanjournal.com/wp-content/uploads/2026/03/elsewhere1.jpg?re..."
+    ],
+    "h2.entry-title a": [
+      "<a href=\"https://sahanjournal.com/arts-culture/twin-cities-things-to-do-walker-dance-rondo-exchange-hmong-vietnamese-art/\" rel=\"bookmark\">Vietnamese folklore meets Midwestern landscapes in playful University of Minnesota show</a>"
+    ]
+  }
+}
