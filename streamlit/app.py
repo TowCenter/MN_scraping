@@ -61,6 +61,83 @@ def get_organizations_data(mongo_uri, db_name):
     return list(db[SCRAPERS_COL].find({}, {"name": 1, "color": 1, "scrapers": 1}))
 
 @st.cache_data(ttl=300)
+def get_scraper_summary(mongo_uri, db_name):
+    """Build per-scraper summary stats via MongoDB aggregation."""
+    client = MongoClient(mongo_uri)
+    db = client[db_name]
+
+    dec1 = datetime(2025, 12, 1, tzinfo=timezone.utc)
+    mar31 = datetime(2026, 3, 31, 23, 59, 59, tzinfo=timezone.utc)
+
+    pipeline = [
+        {
+            "$group": {
+                "_id": "$scraper",
+                "total": {"$sum": 1},
+                "min_date": {"$min": "$date"},
+                "max_date": {"$max": "$date"},
+                "no_content": {
+                    "$sum": {
+                        "$cond": [
+                            {"$or": [
+                                {"$eq": ["$content", None]},
+                                {"$eq": ["$content", ""]},
+                                {"$not": [{"$ifNull": ["$content", False]}]},
+                            ]},
+                            1, 0,
+                        ]
+                    }
+                },
+                "no_date": {
+                    "$sum": {
+                        "$cond": [
+                            {"$or": [
+                                {"$eq": ["$date", None]},
+                                {"$not": [{"$ifNull": ["$date", False]}]},
+                            ]},
+                            1, 0,
+                        ]
+                    }
+                },
+                "successful_in_range": {
+                    "$sum": {
+                        "$cond": [
+                            {"$and": [
+                                {"$ne": ["$content", None]},
+                                {"$ne": ["$content", ""]},
+                                {"$ifNull": ["$content", False]},
+                                {"$ne": ["$date", None]},
+                                {"$ifNull": ["$date", False]},
+                                {"$gte": ["$date", dec1]},
+                                {"$lte": ["$date", mar31]},
+                            ]},
+                            1, 0,
+                        ]
+                    }
+                },
+            }
+        },
+        {"$sort": {"_id": 1}},
+    ]
+
+    rows = []
+    for doc in db[CONTENT_COL].aggregate(pipeline):
+        scraper_path = doc["_id"] or ""
+        min_d = doc["min_date"]
+        max_d = doc["max_date"]
+        rows.append({
+            "_path": scraper_path,
+            "Min Date": min_d.strftime("%Y-%m-%d") if isinstance(min_d, datetime) else "",
+            "Max Date": max_d.strftime("%Y-%m-%d") if isinstance(max_d, datetime) else "",
+            "Total Articles": doc["total"],
+            "No Content": doc["no_content"],
+            "No Date": doc["no_date"],
+            "Successful (Dec–Mar)": doc["successful_in_range"],
+        })
+    return rows
+
+
+@st.cache_data(ttl=300)
 def build_csv(mongo_uri, db_name):
     client = MongoClient(mongo_uri)
     db = client[db_name]
@@ -199,12 +276,8 @@ def main():
         )
 
     # === FLAT SCRAPER TABLE ===
-    scraper_counts = {
-        doc["_id"]: doc["count"]
-        for doc in db[CONTENT_COL].aggregate([
-            {"$group": {"_id": "$scraper", "count": {"$sum": 1}}}
-        ])
-    }
+    scraper_stats = get_scraper_summary(MONGO_URI, DB_NAME)
+    stats_by_path = {s["_path"]: s for s in scraper_stats}
 
     rows = []
     for org in organizations_data:
@@ -246,48 +319,22 @@ def main():
 
             path = scraper.get("path", "")
             module_name = path.split(".")[-1] if path else path
-            last_run = scraper.get("last_run")
-            count = scraper_counts.get(path, 0)
             url = scraper.get("url", "")
-
-            if status == "pass":
-                status_icon = "🟢 pass"
-            elif status == "error":
-                status_icon = "🔴 error"
-            elif status == "unable_to_fetch":
-                status_icon = "🟡 no results"
-            else:
-                status_icon = "⚪ no data"
-
-            active_icon = "✅" if active is not False else "⏸️"
-
-            last_run_str = ""
-            since_str = ""
             has_error = status in ("error", "unable_to_fetch") and active is not False
 
-            if isinstance(last_run, datetime):
-                lr = last_run.replace(tzinfo=timezone.utc) if last_run.tzinfo is None else last_run
-                local_dt = utc_to_local(lr)
-                if local_dt:
-                    last_run_str = local_dt.strftime("%Y-%m-%d %I:%M %p")
-                hours_ago = (current_time - lr).total_seconds() / 3600
-                if hours_ago < 1:
-                    since_str = f"{int(hours_ago * 60)}m ago"
-                elif hours_ago < 24:
-                    since_str = f"{int(hours_ago)}h ago"
-                else:
-                    since_str = f"{int(hours_ago / 24)}d ago"
+            stats = stats_by_path.get(path, {})
 
             rows.append({
                 "_sort": (0 if has_error else 1, org_name.lower()),
                 "Org": org_name,
-                "Scraper Name": module_name,
-                "Status": status_icon,
-                "Active": active_icon,
-                "Last Run": last_run_str,
-                "Since": since_str,
-                "Total Scraped Items": count,
+                "Scraper": module_name,
                 "URL": url,
+                "Min Date": stats.get("Min Date", ""),
+                "Max Date": stats.get("Max Date", ""),
+                "Total Articles": stats.get("Total Articles", 0),
+                "No Content": stats.get("No Content", 0),
+                "No Date": stats.get("No Date", 0),
+                "Successful (Dec–Mar)": stats.get("Successful (Dec–Mar)", 0),
             })
 
     rows.sort(key=lambda r: r["_sort"])
@@ -302,13 +349,14 @@ def main():
             use_container_width=True,
             column_config={
                 "Org": st.column_config.TextColumn("Org"),
-                "Scraper Name": st.column_config.TextColumn("Scraper Name"),
-                "Status": st.column_config.TextColumn("Status", width="medium"),
-                "Active": st.column_config.TextColumn("Active", width="small"),
-                "Last Run": st.column_config.TextColumn("Last Run"),
-                "Since": st.column_config.TextColumn("Since", width="small"),
-                "Total Scraped Items": st.column_config.NumberColumn("Total Scraped Items"),
+                "Scraper": st.column_config.TextColumn("Scraper"),
                 "URL": st.column_config.LinkColumn("URL", display_text="Open"),
+                "Min Date": st.column_config.TextColumn("Min Date"),
+                "Max Date": st.column_config.TextColumn("Max Date"),
+                "Total Articles": st.column_config.NumberColumn("Total Articles"),
+                "No Content": st.column_config.NumberColumn("No Content"),
+                "No Date": st.column_config.NumberColumn("No Date"),
+                "Successful (Dec–Mar)": st.column_config.NumberColumn("Successful (Dec–Mar)"),
             },
         )
     else:
