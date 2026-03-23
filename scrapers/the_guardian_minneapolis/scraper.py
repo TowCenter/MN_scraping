@@ -1,342 +1,133 @@
 """
 Articles Scraper for The Guardian Minneapolis
 
-Generated at: 2026-03-20 13:26:24
 Target URL: https://www.theguardian.com/us-news/minneapolis
-Generated using: gpt-5-mini-2025-08-07
 Content type: articles
 Fields: title, date, url
 
+Uses Google News RSS to reliably discover articles about Minneapolis.
 """
 
 import json
 import os
-from playwright.async_api import async_playwright
-from playwright_stealth import Stealth  # v2.0.1 API
-from dateutil.parser import parse
-import urllib.parse
 import asyncio
+import re
+import urllib.request
+import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
 
 base_url = 'https://www.theguardian.com/us-news/minneapolis'
 
-# Scraper module path for tracking the source of scraped data
 SCRAPER_MODULE_PATH = '.'.join(os.path.splitext(os.path.abspath(__file__))[0].split(os.sep)[-3:])
 
-# Operator user-agent (set in operator.json)
-USER_AGENT = ''
+GOOGLE_NEWS_RSS_URL = (
+    "https://news.google.com/rss/search?"
+    "q=site:theguardian.com+minneapolis&hl=en-US&gl=US&ceid=US:en"
+)
 
-class PlaywrightContext:
-    """Context manager for Playwright browser sessions."""
+SITE_DOMAIN = "theguardian.com"
 
-    async def __aenter__(self):
-        self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.launch()
-        context_kwargs = {'user_agent': USER_AGENT} if USER_AGENT else {}
-        self.context = await self.browser.new_context(**context_kwargs)
-        return self.context
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/121.0.0.0 Safari/537.36"
+)
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.browser.close()
-        await self.playwright.stop()
 
-async def scrape_page(page):
-    """
-    Extract article data from the current page.
+def _fetch_rss(url):
+    """Fetch RSS feed and return parsed XML root."""
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return ET.fromstring(resp.read())
 
-    Parameters:
-        page: Playwright page object
 
-    Returns:
-        List of dictionaries containing article data with keys:
-        - title: Headline or title of the article
-        - date: Publication date in YYYY-MM-DD format (optional — use None if not found)
-        - url: Link to the full article
-        - scraper: module path for traceability
-    """
+def _resolve_google_news_url(google_url):
+    """Follow Google News redirect to get the real article URL."""
+    try:
+        req = urllib.request.Request(google_url, headers={"User-Agent": USER_AGENT}, method="HEAD")
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            final_url = resp.url
+            if SITE_DOMAIN in final_url:
+                return final_url
+    except Exception:
+        pass
+    return google_url
+
+
+def _parse_items(root):
+    """Parse RSS XML into article dicts."""
     items = []
+    seen = set()
 
-    # Find article list items. Use a reasonably stable container selector from examples.
-    article_nodes = await page.query_selector_all('ul.dcr-1ydzu3d > li')
+    # Pattern to strip " - <source name>" suffix from Google News titles
+    suffix_pattern = re.compile(r'\s*-\s*(?:' + re.escape(SITE_DOMAIN).replace(r'\.',  r'[.]?') + r'|[A-Za-z]{2,30})\s*$', re.I)
 
-    for li in article_nodes:
-        # Title extraction: primary selector is the headline span; fallback to h3.card-headline or link aria-label.
-        title = None
+    for item in root.iter("item"):
         try:
-            title_el = await li.query_selector('.show-underline.headline-text')
-            if title_el:
-                raw = await title_el.text_content()
-                if raw:
-                    title = raw.strip()
+            title_el = item.find("title")
+            link_el = item.find("link")
+            pub_date_el = item.find("pubDate")
+
+            if title_el is None or link_el is None:
+                continue
+
+            title = (title_el.text or "").strip()
+            # Remove Google News source suffix
+            title = suffix_pattern.sub('', title).strip()
+
+            if not title:
+                continue
+
+            google_url = (link_el.text or "").strip()
+            if not google_url:
+                continue
+
+            url = _resolve_google_news_url(google_url)
+
+            if url in seen:
+                continue
+            seen.add(url)
+
+            date_str = None
+            if pub_date_el is not None and pub_date_el.text:
+                try:
+                    dt = parsedate_to_datetime(pub_date_el.text.strip())
+                    date_str = dt.strftime("%Y-%m-%d")
+                except Exception:
+                    pass
+
+            items.append({
+                "title": title,
+                "date": date_str,
+                "url": url,
+                "scraper": SCRAPER_MODULE_PATH,
+            })
         except Exception:
-            title = None
-
-        if not title:
-            try:
-                h3_el = await li.query_selector('h3.card-headline')
-                if h3_el:
-                    raw = await h3_el.text_content()
-                    if raw:
-                        title = raw.strip()
-            except Exception:
-                title = None
-
-        if not title:
-            try:
-                link_for_label = await li.query_selector('a[aria-label]')
-                if link_for_label:
-                    aria = await link_for_label.get_attribute('aria-label')
-                    if aria:
-                        title = aria.strip()
-            except Exception:
-                title = None
-
-        # URL extraction: prefer article anchor inside the item (image/title link).
-        url = None
-        try:
-            # anchor used for cards (may be empty text but has href)
-            anchor = await li.query_selector('a.dcr-2yd10d[href], a[aria-label][href], a[href*="/us-news/"]')
-            if anchor:
-                href = await anchor.get_attribute('href')
-                if href:
-                    url = urllib.parse.urljoin(base_url, href)
-        except Exception:
-            url = None
-
-        # Date extraction: look for any <time datetime="..."> inside the item and parse its datetime attribute.
-        date = None
-        try:
-            time_el = await li.query_selector('time[datetime], footer time[datetime]')
-            if time_el:
-                datetime_attr = await time_el.get_attribute('datetime')
-                if datetime_attr:
-                    # parse and normalize to YYYY-MM-DD
-                    try:
-                        dt = parse(datetime_attr)
-                        date = dt.date().isoformat()
-                    except Exception:
-                        # final fallback: try to parse visible text content
-                        txt = await time_el.text_content()
-                        if txt:
-                            try:
-                                dt = parse(txt, fuzzy=True)
-                                date = dt.date().isoformat()
-                            except Exception:
-                                date = None
-        except Exception:
-            date = None
-
-        # Ensure required keys and stable structure; skip items missing title or url.
-        if not title and not url:
-            # nothing usable found for this node
             continue
-
-        item = {
-            'title': title if title else None,
-            'date': date if date else None,
-            'url': url if url else None,
-            'scraper': SCRAPER_MODULE_PATH,
-        }
-        items.append(item)
 
     return items
 
-async def advance_page(page):
-    """
-    Finds the next page button or link to navigate to the next page of articles.
-    Clicks button or navigates to next page URL if found. Scroll load more button into view if not visible.
-    Defaults to infinite scroll if no pagination found.
-
-    Parameters:
-        page: Playwright page object
-    """
-
-    # Strategy (robust):
-    # 1. Collect all anchors with ?page= in href and choose the one with smallest page number > current.
-    # 2. Try common next selectors (arrow class, numeric link class) if above didn't find a candidate.
-    # 3. Attempt click with wait_for_navigation; if that fails, use goto with resolved href.
-    # 4. Fallback to infinite scroll.
-
-    try:
-        initial_url = page.url
-        parsed = urllib.parse.urlparse(initial_url)
-        qs = urllib.parse.parse_qs(parsed.query)
-        try:
-            current_page_num = int(qs.get('page', ['1'])[0])
-        except Exception:
-            current_page_num = 1
-
-        # 1) Find all anchors with ?page= and pick smallest page > current_page_num
-        anchors = await page.query_selector_all('a[href*="?page="]')
-        candidate = None
-        candidate_num = None
-        candidate_href = None
-
-        for a in anchors:
-            try:
-                href = await a.get_attribute('href')
-                if not href:
-                    continue
-                full = urllib.parse.urljoin(initial_url, href)
-                parsed_href = urllib.parse.urlparse(full)
-                qs_href = urllib.parse.parse_qs(parsed_href.query)
-                if 'page' not in qs_href:
-                    continue
-                try:
-                    num = int(qs_href.get('page', [None])[0])
-                except Exception:
-                    continue
-                if num and num > current_page_num:
-                    if candidate_num is None or num < candidate_num:
-                        candidate = a
-                        candidate_num = num
-                        candidate_href = full
-            except Exception:
-                continue
-
-        if candidate and candidate_href:
-            # Prefer navigation via goto (more reliable). Use goto with wait_for_load_state.
-            try:
-                await page.goto(candidate_href)
-                await page.wait_for_load_state('networkidle')
-                return
-            except Exception:
-                # If goto fails, attempt click with navigation waiting
-                try:
-                    await candidate.scroll_into_view_if_needed()
-                    wait_promise = page.wait_for_navigation(wait_until='networkidle', timeout=10000)
-                    await candidate.click()
-                    await wait_promise
-                    return
-                except Exception:
-                    # fall through to try other selectors or infinite scroll
-                    pass
-
-        # 2) Try specific next-arrow or numeric class selectors (fallback)
-        next_selectors = ['a.dcr-jh1m5g', 'a.dcr-1nzqxjn', 'a[rel="next"]']
-        for sel in next_selectors:
-            try:
-                el = await page.query_selector(sel)
-                if not el:
-                    continue
-                href = await el.get_attribute('href')
-                if href:
-                    next_url = urllib.parse.urljoin(initial_url, href)
-                    try:
-                        await page.goto(next_url)
-                        await page.wait_for_load_state('networkidle')
-                        return
-                    except Exception:
-                        # try click approach
-                        try:
-                            await el.scroll_into_view_if_needed()
-                            wait_promise = page.wait_for_navigation(wait_until='networkidle', timeout=10000)
-                            await el.click()
-                            await wait_promise
-                            return
-                        except Exception:
-                            continue
-                else:
-                    # no href: attempt click with navigation waiting, or fallback to waiting for URL change
-                    try:
-                        await el.scroll_into_view_if_needed()
-                        wait_promise = page.wait_for_navigation(wait_until='networkidle', timeout=10000)
-                        await el.click()
-                        await wait_promise
-                        return
-                    except Exception:
-                        # try click and wait for URL change manually
-                        try:
-                            await el.click()
-                            # wait up to 8s for URL to change
-                            for _ in range(8):
-                                await asyncio.sleep(1)
-                                if page.url != initial_url:
-                                    await page.wait_for_load_state('networkidle')
-                                    return
-                        except Exception:
-                            continue
-            except Exception:
-                continue
-
-    except Exception:
-        # if any unexpected error occurs, continue to infinite scroll fallback
-        pass
-
-    # 3) Infinite scroll fallback: scroll to bottom and wait for content to load.
-    try:
-        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-        # Give site time to load additional content (or load more button to appear)
-        await page.wait_for_timeout(3000)
-        # Some sites require an additional short scroll to trigger lazy load
-        await page.evaluate("window.scrollBy(0, 500)")
-        await page.wait_for_timeout(1500)
-    except Exception:
-        # If scrolling fails for any reason, just wait a moment
-        await page.wait_for_timeout(2000)
-
-    return
 
 async def get_first_page(base_url=base_url):
-    """Fetch only the first page of articles."""
-    async with PlaywrightContext() as context:
-        page = await context.new_page()
-        await Stealth().apply_stealth_async(page)
-        await page.goto(base_url)
-        items = await scrape_page(page)
-        await page.close()
-        return items
+    """Fetch articles from Google News RSS feed."""
+    root = _fetch_rss(GOOGLE_NEWS_RSS_URL)
+    return _parse_items(root)
+
 
 async def get_all_articles(base_url=base_url, max_pages=100):
-    """Fetch all articles from all pages."""
+    """Google News RSS returns up to ~100 results in a single feed."""
+    return await get_first_page(base_url=base_url)
 
-    async with PlaywrightContext() as context:
-        items = []
-        seen = set()
-        page = await context.new_page()
-        await Stealth().apply_stealth_async(page)
-        page_count = 0
-
-        await page.goto(base_url)
-
-        page_count = 0
-        item_count = 0  # previous count
-        new_item_count = 0  # current count
-
-        try:
-            while page_count < max_pages:
-                page_items = await scrape_page(page)
-                for item in page_items:
-                    # Create dedupe key by url and title (both may be present). Use tuple to ensure hashable.
-                    dedupe_key = (item.get('url'), item.get('title'))
-                    if dedupe_key not in seen:
-                        seen.add(dedupe_key)
-                        items.append(item)
-                new_item_count = len(items)
-
-                if new_item_count <= item_count:
-                    break
-
-                page_count += 1
-                item_count = new_item_count
-
-                await advance_page(page)
-
-        except Exception as e:
-            print(f"Error occurred while getting next page: {e}")
-
-
-        await page.close()
-        return items
 
 async def main():
     """Main execution function."""
     all_items = await get_all_articles()
 
-    # Save results to JSON
     result_path = os.path.join(os.path.dirname(__file__), 'result.json')
     with open(result_path, 'w') as f:
         json.dump(all_items, f, indent=2)
-    print(f"Results saved to {result_path}")
+    print(f"Results saved to {result_path} ({len(all_items)} articles)")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
