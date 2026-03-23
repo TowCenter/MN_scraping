@@ -1,18 +1,18 @@
 {
   "item_selectors": [
-    "article.article",
-    "div.collection-search article.article"
+    ".collection-search .article",
+    "article.article"
   ],
   "next_page_selectors": [
     "div.button.load-more a",
     "div.button.load-more"
   ],
   "item_examples": {
-    "article.article": [
-      "<article class=\"article\"><div class=\"m\"><a href=\"https://www.foxnews.com/us/12-minneapolis-anti-ice-agitators-arrested-after-massive-crowd-gathers-outside-hilton-hotel\" target=\"_blank\"><picture><img alt=\"\" src=\"https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/02/156/88/minneapolis-agitators.jpg?ve=1&amp;tl=1\"/></picture></a></div> <div class=\"info\"><header class=\"info-header\"><div class=\"meta\"><!-- --> <span class=\"eyebrow\"><a href=\"https://www.foxnews.com/us\" target=\"_blank\">us</a></span> <span class=\"time\">February 6</span></div> <h2 class=\"title\"><a href=\"https://www.foxnews.com/us/12-minneapolis-anti-ice-agitators-arrested-after-massive-crowd-gathers-outside-hilton-hotel\" target=\"_blank\">12 Minneapolis anti-ICE agitators arrested after massive crowd gathers outside Hilton hotel</a></h2></header> <div class=\"content\"><p class=\"dek\">At least 12 arrested at Minneapolis Hilton hotel during anti-ICE demonstration that drew up to 175 people making noise with pots, pans and whistles.</p></div></div></article>"
+    ".collection-search .article": [
+      "<article class=\"article\"><div class=\"m\"><a href=\"https://www.foxnews.com/politics/map-shows-glaring-scope-of-auto-theft-increase-in-frey-walzs-minneapolis-deterrence-problem\" target=\"_blank\"><picture><img alt=\"\" src=\"https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/03/156/88/walz-hearing.jpg?ve=1&amp;tl=1\"/></picture></a></div> <div class=\"info\"><header class=\"info-header\"><div class=\"meta\"><!-- --> <span class=\"eyebrow\"><a href=\"https://www.foxnews.com/politics\" target=\"_blank\">politics</a></span> <span class=\"time\">4 days ago</span></div> <h2 class=\"title\"><a href=\"https://www.foxnews.com/politics/map-shows-glaring-scope-of-auto-theft-increase-in-frey-walzs-minneapolis-deterrence-problem\" target=\"_blank\">Map shows glaring scope of auto theft increase in Walz's Minneapolis: 'Deterrence problem'</a></h2></header> <div class=\"content\"><p class=\"dek\">Minneapolis saw a sharp rise in auto thefts in January and February of 2026, which a former state trooper says is part of a broader problem of a lack of deterrence.</p></div></div></article>"
     ],
-    "div.collection-search article.article": [
-      "<article class=\"article\"><div class=\"m\"><a href=\"https://www.foxnews.com/us/12-minneapolis-anti-ice-agitators-arrested-after-massive-crowd-gathers-outside-hilton-hotel\" target=\"_blank\"><picture><img alt=\"\" src=\"https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/02/156/88/minneapolis-agitators.jpg?ve=1&amp;tl=1\"/></picture></a></div> <div class=\"info\"><header class=\"info-header\"><div class=\"meta\"><!-- --> <span class=\"eyebrow\"><a href=\"https://www.foxnews.com/us\" target=\"_blank\">us</a></span> <span class=\"time\">February 6</span></div> <h2 class=\"title\"><a href=\"https://www.foxnews.com/us/12-minneapolis-anti-ice-agitators-arrested-after-massive-crowd-gathers-outside-hilton-hotel\" target=\"_blank\">12 Minneapolis anti-ICE agitators arrested after massive crowd gathers outside Hilton hotel</a></h2></header> <div class=\"content\"><p class=\"dek\">At least 12 arrested at Minneapolis Hilton hotel during anti-ICE demonstration that drew up to 175 people making noise with pots, pans and whistles.</p></div></div></article>"
+    "article.article": [
+      "<article class=\"article\"><div class=\"m\"><a href=\"https://www.foxnews.com/politics/map-shows-glaring-scope-of-auto-theft-increase-in-frey-walzs-minneapolis-deterrence-problem\" target=\"_blank\"><picture><img alt=\"\" src=\"https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/03/156/88/walz-hearing.jpg?ve=1&amp;tl=1\"/></picture></a></div> <div class=\"info\"><header class=\"info-header\"><div class=\"meta\"><!-- --> <span class=\"eyebrow\"><a href=\"https://www.foxnews.com/politics\" target=\"_blank\">politics</a></span> <span class=\"time\">4 days ago</span></div> <h2 class=\"title\"><a href=\"https://www.foxnews.com/politics/map-shows-glaring-scope-of-auto-theft-increase-in-frey-walzs-minneapolis-deterrence-problem\" target=\"_blank\">Map shows glaring scope of auto theft increase in Walz's Minneapolis: 'Deterrence problem'</a></h2></header> <div class=\"content\"><p class=\"dek\">Minneapolis saw a sharp rise in auto thefts in January and February of 2026, which a former state trooper says is part of a broader problem of a lack of deterrence.</p></div></div></article>"
     ]
   },
   "next_page_examples": {
@@ -29,34 +29,30 @@
   ],
   "title_examples": {
     "h2.title": [
-      "<h2 class=\"title\"><a href=\"https://www.foxnews.com/us/12-minneapolis-anti-ice-agitators-arrested-after-massive-crowd-gathers-outside-hilton-hotel\" target=\"_blank\">12 Minneapolis anti-ICE agitators arrested after massive crowd gathers outside Hilton hotel</a></h2>"
+      "<h2 class=\"title\"><a href=\"https://www.foxnews.com/politics/map-shows-glaring-scope-of-auto-theft-increase-in-frey-walzs-minneapolis-deterrence-problem\" target=\"_blank\">Map shows glaring scope of auto theft increase in Walz's Minneapolis: 'Deterrence problem'</a></h2>"
     ],
     "h2.title a": [
-      "<a href=\"https://www.foxnews.com/us/12-minneapolis-anti-ice-agitators-arrested-after-massive-crowd-gathers-outside-hilton-hotel\" target=\"_blank\">12 Minneapolis anti-ICE agitators arrested after massive crowd gathers outside Hilton hotel</a>"
+      "<a href=\"https://www.foxnews.com/politics/map-shows-glaring-scope-of-auto-theft-increase-in-frey-walzs-minneapolis-deterrence-problem\" target=\"_blank\">Map shows glaring scope of auto theft increase in Walz's Minneapolis: 'Deterrence problem'</a>"
     ]
   },
   "date_selectors": [
-    "div.meta .time",
+    ".meta .time",
     "span.time"
   ],
   "date_examples": {
-    "div.meta .time": [
-      "<span class=\"time\">February 6</span>"
+    ".meta .time": [
+      "<span class=\"time\">4 days ago</span>"
     ],
     "span.time": [
       "<span class=\"time\"></span>"
     ]
   },
   "url_selectors": [
-    "article.article a[href]",
-    "h2.title a[href]"
+    "h2.title a"
   ],
   "url_examples": {
-    "article.article a[href]": [
-      "<a href=\"https://www.foxnews.com/us/12-minneapolis-anti-ice-agitators-arrested-after-massive-crowd-gathers-outside-hilton-hotel\" target=\"_blank\"><picture><img alt=\"\" src=\"https://a57.foxnews.com/static.foxnews.com/foxnews.com/content/uploads/2026/02/156/88/minneapolis-agitators.jpg?ve=1&amp;tl=1\"/></picture></a>"
-    ],
-    "h2.title a[href]": [
-      "<a href=\"https://www.foxnews.com/us/12-minneapolis-anti-ice-agitators-arrested-after-massive-crowd-gathers-outside-hilton-hotel\" target=\"_blank\">12 Minneapolis anti-ICE agitators arrested after massive crowd gathers outside Hilton hotel</a>"
+    "h2.title a": [
+      "<a href=\"https://www.foxnews.com/politics/map-shows-glaring-scope-of-auto-theft-increase-in-frey-walzs-minneapolis-deterrence-problem\" target=\"_blank\">Map shows glaring scope of auto theft increase in Walz's Minneapolis: 'Deterrence problem'</a>"
     ]
   }
 }

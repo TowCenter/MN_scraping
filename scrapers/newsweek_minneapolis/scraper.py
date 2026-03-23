@@ -1,7 +1,7 @@
 """
 Articles Scraper for Newsweek Minneapolis
 
-Generated at: 2026-03-20 13:23:59
+Generated at: 2026-03-20 14:34:36
 Target URL: https://search.newsweek.com/?q=minneapolis&sort=date
 Generated using: gpt-5-mini-2025-08-07
 Content type: articles
@@ -39,6 +39,44 @@ class PlaywrightContext:
         await self.browser.close()
         await self.playwright.stop()
 
+async def _extract_date_from_container(container):
+    """
+    Helper to extract date string from a container element handle.
+    Tries multiple common patterns (time[datetime], meta tags, spans with date/time in class).
+    Returns parsed ISO date string YYYY-MM-DD or None.
+    """
+    try:
+        # Try <time datetime="">
+        time_el = await container.query_selector('time')
+        date_str = None
+        if time_el:
+            date_str = await time_el.get_attribute('datetime') or await time_el.text_content()
+        if not date_str:
+            # meta[itemprop="datePublished"] or meta[name="date"]
+            meta = await container.query_selector('meta[itemprop="datePublished"], meta[name="date"], meta[property="article:published_time"]')
+            if meta:
+                date_str = await meta.get_attribute('content')
+        if not date_str:
+            # common date-like spans or divs
+            candidate = await container.query_selector('span[class*="date"], span[class*="time"], div[class*="date"], div[class*="time"], p[class*="date"]')
+            if candidate:
+                date_str = await candidate.text_content()
+        if not date_str:
+            # fallback: any element with attribute datetime inside container
+            any_dt = await container.query_selector('[datetime]')
+            if any_dt:
+                date_str = await any_dt.get_attribute('datetime') or await any_dt.text_content()
+        if date_str:
+            # Normalize and parse
+            try:
+                parsed = parse(date_str.strip(), fuzzy=True)
+                return parsed.date().isoformat()
+            except Exception:
+                return None
+    except Exception:
+        return None
+    return None
+
 async def scrape_page(page):
     """
     Extract article data from the current page.
@@ -49,70 +87,66 @@ async def scrape_page(page):
     Returns:
         List of dictionaries containing article data with keys:
         - title: Headline or title of the article
-        - date: Publication date in YYYY-MM-DD format or None
+        - date: Publication date in YYYY-MM-DD format
         - url: Link to the full article
         - scraper: module path for traceability
     """
+
     items = []
 
-    # Primary selector for article link/title as found in the page examples
-    link_selector = 'a.NewsweekLink_link__BTn_o'
-
-    # Find all matching anchors
-    anchors = await page.query_selector_all(link_selector)
+    # Prefer anchor elements that represent article links on Newsweek search/list pages.
+    # Based on observed HTML examples, a.NewsweekLink_link__BTn_o is a reliable article link selector.
+    try:
+        anchors = await page.query_selector_all('a.NewsweekLink_link__BTn_o')
+    except Exception:
+        anchors = []
 
     for a in anchors:
         try:
-            # Title - use text_content() per instructions (works even for hidden elements)
+            # Title (use text_content to capture DOM text even if hidden)
             raw_title = await a.text_content()
-            title = raw_title.strip() if raw_title and raw_title.strip() else None
+            title = raw_title.strip() if raw_title else None
 
-            # URL - resolve relative hrefs
+            # URL (may be relative)
             href = await a.get_attribute('href')
-            url = None
-            if href:
-                url = urllib.parse.urljoin(base_url, href)
-
-            # Attempt to find a nearby time/date element.
-            # Look in closest article ancestor, parent element, or the element itself for common date selectors.
-            date_raw = await a.evaluate("""el => {
-                try {
-                    const ancestor = el.closest('article') || el.parentElement || el;
-                    // common selectors that might contain dates
-                    const timeEl = ancestor.querySelector('time, .date, [data-testid*="date"], .ArticleHeader_date, .ArticleMeta_time, .PublishedDate, .timestamp');
-                    if (!timeEl) return null;
-                    // Prefer datetime attribute if present
-                    const dt = timeEl.getAttribute && timeEl.getAttribute('datetime');
-                    return (dt && dt.trim()) ? dt.trim() : (timeEl.textContent ? timeEl.textContent.trim() : null);
-                } catch (e) {
-                    return null;
-                }
-            }""")
-
-            date_iso = None
-            if date_raw:
-                try:
-                    # Parse date and normalize to YYYY-MM-DD
-                    parsed = parse(date_raw, fuzzy=True)
-                    date_iso = parsed.date().isoformat()
-                except Exception:
-                    date_iso = None
-
-            # Only include items with required fields (title and url)
-            if not title or not url:
+            if not href:
+                # skip entries without href since url is required
                 continue
+            # Resolve to absolute URL using current page URL as base
+            url = urllib.parse.urljoin(page.url, href)
+
+            # Attempt to find a container for date extraction (closest article ancestor or parent element)
+            container_handle = await a.evaluate_handle("el => el.closest('article') || el.parentElement || el")
+            container = container_handle.as_element() if container_handle else None
+
+            date = None
+            if container:
+                date = await _extract_date_from_container(container)
 
             items.append({
                 'title': title,
-                'date': date_iso,
+                'date': date,
                 'url': url,
                 'scraper': SCRAPER_MODULE_PATH,
             })
         except Exception:
-            # Skip malformed item but continue processing others
+            # Skip malformed entries but continue processing others
             continue
 
-    return items
+    # Additionally, there are trending story spans that are not anchors (no URL).
+    # We skip any items that don't have a URL because url is required per spec.
+
+    # Deduplicate by URL + title
+    seen = set()
+    unique_items = []
+    for it in items:
+        key = (it.get('url'), it.get('title'))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_items.append(it)
+
+    return unique_items
 
 async def advance_page(page):
     """
@@ -123,100 +157,67 @@ async def advance_page(page):
     Parameters:
         page: Playwright page object
     """
-    # Candidate selectors for "next" or "load more" behaviors
-    NEXT_SELECTORS = [
-        'a[rel="next"]',
-        'a[aria-label="Next"]',
-        'a.pagination__next',
-        'a.next',
-        'a[title="Next"]',
-        'button[aria-label="Load more"]',
-        'button.load-more',
-        'button[id*="load"]',
-        'button[title*="Load"]',
-        'button[title*="More"]',
-        'a[href*="page="]:has-text("Next")'
-    ]
 
+    # Try common "next page" link selectors first
     try:
-        # Try to find and use explicit next/load-more controls first
-        for sel in NEXT_SELECTORS:
-            el = await page.query_selector(sel)
-            if not el:
-                continue
-
-            # If it's an anchor with href, navigate to that url
-            href = await el.get_attribute('href')
+        next_link = await page.query_selector('a[rel="next"], a.pagination__next, a[aria-label="Next"], a.next, a[role="button"].next')
+        if next_link:
+            href = await next_link.get_attribute('href')
             if href:
-                next_url = urllib.parse.urljoin(base_url, href)
+                next_url = urllib.parse.urljoin(page.url, href)
                 try:
-                    await el.scroll_into_view_if_needed()
-                except Exception:
-                    pass
-                try:
-                    # Use goto to ensure full navigation when href is present
                     await page.goto(next_url)
-                    await page.wait_for_load_state('networkidle', timeout=10000)
+                    await page.wait_for_load_state('networkidle')
+                    return
                 except Exception:
-                    # fallback: click and wait a bit
+                    # If direct navigation fails, try clicking
                     try:
-                        await el.click()
-                        await page.wait_for_timeout(2000)
+                        await next_link.click()
+                        await page.wait_for_load_state('networkidle')
+                        return
                     except Exception:
                         pass
-                return
+    except Exception:
+        pass
 
-            # Otherwise try clicking the element (button)
+    # Try "Load more" buttons (case-insensitive)
+    try:
+        load_more_locator = page.locator('button', has_text='Load more')
+        if await load_more_locator.count() == 0:
+            load_more_locator = page.locator('button', has_text='Load More')
+        if await load_more_locator.count() > 0:
             try:
-                await el.scroll_into_view_if_needed()
-                await el.click()
-                # Wait briefly for AJAX-loaded content
-                await page.wait_for_timeout(2500)
+                await load_more_locator.first.scroll_into_view_if_needed()
+                await load_more_locator.first.click()
+                # wait a bit for new content to load
+                await page.wait_for_timeout(1500)
                 return
             except Exception:
-                # If click fails, continue trying other selectors
-                continue
-
+                pass
     except Exception:
-        # If any unexpected error occurs while trying selectors, fall back to infinite scroll
         pass
 
-    # Fallback: infinite scroll strategy
-    # We'll attempt a few scrolls and wait for new items to load.
-    item_selector = 'a.NewsweekLink_link__BTn_o'
+    # No explicit pagination found — fallback to infinite scroll.
+    # Scroll multiple times until document height stops increasing or until a few iterations.
     try:
-        previous_count = await page.eval_on_selector_all(item_selector, 'els => els.length')
-    except Exception:
-        previous_count = 0
-
-    # Try scrolling multiple times to load more content (common for infinite scroll sites)
-    max_attempts = 6
-    for _ in range(max_attempts):
-        try:
+        max_scroll_attempts = 5
+        previous_height = await page.evaluate("() => document.body.scrollHeight")
+        for _ in range(max_scroll_attempts):
             await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-            # Small pause to allow lazy loads / XHRs
+            # give network / lazy load some time
             await page.wait_for_timeout(2000)
-        except Exception:
-            await page.wait_for_timeout(2000)
-
-        try:
-            current_count = await page.eval_on_selector_all(item_selector, 'els => els.length')
-        except Exception:
-            current_count = previous_count
-
-        if current_count > previous_count:
-            # New content loaded; return to let caller scrape new items
-            return
-        previous_count = current_count
-
-    # If we reach here, no new content appeared after scrolling attempts.
-    # As a last resort, attempt a short page.reload() to see if additional content becomes available.
-    try:
-        await page.reload()
-        await page.wait_for_load_state('networkidle', timeout=8000)
+            new_height = await page.evaluate("() => document.body.scrollHeight")
+            if new_height == previous_height:
+                # small additional wait to ensure lazy loads have chance
+                await page.wait_for_timeout(1000)
+                new_height = await page.evaluate("() => document.body.scrollHeight")
+                if new_height == previous_height:
+                    break
+            previous_height = new_height
     except Exception:
-        # nothing else to do; exit and let caller decide to stop
-        pass
+        # Ensure we don't raise from pagination fallback
+        await page.wait_for_timeout(1000)
+        return
 
 
 async def get_first_page(base_url=base_url):

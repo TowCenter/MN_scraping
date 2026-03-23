@@ -1,12 +1,46 @@
 {
-  "item_selectors": [],
+  "item_selectors": [
+    "div.space-y-4 a.text-navy-200",
+    "ul.space-y-2 li",
+    "div.grid a.text-navy-200"
+  ],
   "next_page_selectors": [],
-  "item_examples": {},
+  "item_examples": {
+    "div.space-y-4 a.text-navy-200": [
+      "<a class=\"text-navy-200 hover:text-white transition-colors\" href=\"https://www.facebook.com/3hmongbroadcasting\" rel=\"noopener noreferrer\" target=\"_blank\"><svg class=\"lucide lucide-facebook h-5 w-5\" fill=\"none\" height=\"24\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" viewbox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z\"></path></svg><span class=\"sr-only\">Facebook</span></a>"
+    ],
+    "ul.space-y-2 li": [
+      "<li><a class=\"text-navy-200 hover:text-white text-sm transition-colors\" href=\"/shows/3hmongtv-news\">3HmongTV News</a></li>"
+    ],
+    "div.grid a.text-navy-200": [
+      "<a class=\"text-navy-200 hover:text-white transition-colors\" href=\"https://www.facebook.com/3hmongbroadcasting\" rel=\"noopener noreferrer\" target=\"_blank\"><svg class=\"lucide lucide-facebook h-5 w-5\" fill=\"none\" height=\"24\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" viewbox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z\"></path></svg><span class=\"sr-only\">Facebook</span></a>"
+    ]
+  },
   "next_page_examples": {},
-  "title_selectors": [],
-  "title_examples": {},
+  "title_selectors": [
+    "a.text-navy-200",
+    "ul.space-y-2 li a"
+  ],
+  "title_examples": {
+    "a.text-navy-200": [
+      "<a class=\"text-navy-200 hover:text-white transition-colors\" href=\"https://www.facebook.com/3hmongbroadcasting\" rel=\"noopener noreferrer\" target=\"_blank\"><svg class=\"lucide lucide-facebook h-5 w-5\" fill=\"none\" height=\"24\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" viewbox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z\"></path></svg><span class=\"sr-only\">Facebook</span></a>"
+    ],
+    "ul.space-y-2 li a": [
+      "<a class=\"text-navy-200 hover:text-white text-sm transition-colors\" href=\"/shows/3hmongtv-news\">3HmongTV News</a>"
+    ]
+  },
   "date_selectors": [],
   "date_examples": {},
-  "url_selectors": [],
-  "url_examples": {}
+  "url_selectors": [
+    "a.text-navy-200",
+    "ul.space-y-2 li a"
+  ],
+  "url_examples": {
+    "a.text-navy-200": [
+      "<a class=\"text-navy-200 hover:text-white transition-colors\" href=\"https://www.facebook.com/3hmongbroadcasting\" rel=\"noopener noreferrer\" target=\"_blank\"><svg class=\"lucide lucide-facebook h-5 w-5\" fill=\"none\" height=\"24\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" viewbox=\"0 0 24 24\" width=\"24\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z\"></path></svg><span class=\"sr-only\">Facebook</span></a>"
+    ],
+    "ul.space-y-2 li a": [
+      "<a class=\"text-navy-200 hover:text-white text-sm transition-colors\" href=\"/shows/3hmongtv-news\">3HmongTV News</a>"
+    ]
+  }
 }

@@ -1,3 +1,14 @@
+"""
+Articles Scraper for Patch Minneapolis
+
+Generated at: 2026-03-20 15:03:58
+Target URL: https://patch.com/minnesota/minneapolis
+Generated using: gpt-5-mini-2025-08-07
+Content type: articles
+Fields: title, date, url
+
+"""
+
 import json
 import os
 from playwright.async_api import async_playwright
@@ -19,6 +30,7 @@ class PlaywrightContext:
 
     async def __aenter__(self):
         self.playwright = await async_playwright().start()
+        # Launch browser (headless by default)
         self.browser = await self.playwright.chromium.launch()
         context_kwargs = {'user_agent': USER_AGENT} if USER_AGENT else {}
         self.context = await self.browser.new_context(**context_kwargs)
@@ -38,280 +50,194 @@ async def scrape_page(page):
     Returns:
         List of dictionaries containing article data with keys:
         - title: Headline or title of the article
-        - date: Publication date in YYYY-MM-DD format or None
+        - date: Publication date in YYYY-MM-DD format (optional — None if not found)
         - url: Absolute link to the full article
         - scraper: module path for traceability
     """
     items = []
 
-    # Use relatively robust selectors that match CSS-module class patterns
-    # Article container: match elements whose class contains 'ArticleCard' or 'Card__'
-    article_selector = "article[class*='ArticleCard'], article[class*='Card__']"
-    # Title link inside article: anchor whose class contains 'TitleLink'
-    title_link_selector = "a[class*='TitleLink']"
-    # Date: time element inside article
-    time_selector = "time"
-    try:
-        article_elements = await page.query_selector_all(article_selector)
-    except Exception:
-        article_elements = []
+    # Choose a tolerant article container selector: look for article elements that appear to be cards.
+    # Use a generic article selector and then look inside each for an h2 > a or a.thumbnail/title link.
+    article_nodes = await page.query_selector_all("article")
 
-    for article in article_elements:
-        # Title extraction (required)
-        title = None
-        url = None
-        date_val = None
-
+    for article in article_nodes:
         try:
-            title_el = await article.query_selector(title_link_selector)
-            if title_el:
-                title_text = await title_el.text_content()
-                if title_text:
-                    title = title_text.strip()
-                href = await title_el.get_attribute('href')
-                if href:
-                    # Build absolute URL relative to current page
-                    url = urllib.parse.urljoin(page.url, href.strip())
-        except Exception:
-            title = title or None
-            url = url or None
+            # Title: prefer h2 > a, otherwise any anchor with a title-like role inside the article
+            title_el = await article.query_selector("h2 a")
+            if not title_el:
+                # fallback to anchor with thumbnail or title link
+                title_el = await article.query_selector("a[href][title]")
+            if not title_el:
+                # no usable title anchor found; skip this article
+                continue
 
-        # Date extraction (optional)
-        try:
-            time_el = await article.query_selector(time_selector)
+            title_text = (await title_el.text_content() or "").strip()
+            if not title_text:
+                # fallback to title attribute
+                title_text = (await title_el.get_attribute("title") or "").strip()
+            if not title_text:
+                # still empty, skip
+                continue
+
+            # URL: resolve relative href to absolute
+            href = await title_el.get_attribute("href")
+            if not href:
+                # skip articles without href
+                continue
+            url = urllib.parse.urljoin(page.url, href)
+
+            # Date: look for <time datetime="..."> inside the article
+            date_value = None
+            time_el = await article.query_selector("time[datetime], time")
             if time_el:
-                # Prefer datetime attribute, fall back to text content
-                datetime_attr = await time_el.get_attribute('datetime')
-                date_text = None
-                if datetime_attr:
-                    date_text = datetime_attr.strip()
-                else:
-                    text = await time_el.text_content()
-                    if text:
-                        date_text = text.strip()
-                if date_text:
-                    # Try to parse into YYYY-MM-DD
+                datetime_attr = await time_el.get_attribute("datetime")
+                # If datetime attribute exists, parse it; otherwise try text content parse as fallback
+                dt_to_parse = datetime_attr or (await time_el.text_content() or "").strip()
+                if dt_to_parse:
                     try:
-                        parsed = parse(date_text)
-                        date_val = parsed.date().isoformat()
+                        parsed = parse(dt_to_parse)
+                        # Format as YYYY-MM-DD
+                        date_value = parsed.date().isoformat()
                     except Exception:
-                        # If parse fails (e.g., relative "15h"), set None
-                        date_val = None
-        except Exception:
-            date_val = None
+                        # If parsing fails, leave date_value as None
+                        date_value = None
 
-        # Ensure required fields exist before adding
-        if title and url:
             items.append({
-                'title': title,
-                'date': date_val,
-                'url': url,
-                'scraper': SCRAPER_MODULE_PATH,
+                "title": title_text,
+                "date": date_value,
+                "url": url,
+                "scraper": SCRAPER_MODULE_PATH,
             })
+        except Exception:
+            # Skip malformed article nodes but continue processing others
+            continue
 
     return items
 
 async def advance_page(page):
     """
     Finds the next page button or link to navigate to the next page of articles.
-    Clicks/navigates to next page URL if found. Scrolls to load more if no pagination found.
+    Clicks button or navigates to next page URL if found. Scroll load more button into view if not visible.
+    Defaults to infinite scroll if no pagination found.
 
     Parameters:
         page: Playwright page object
     """
-    # Strategy:
-    # - Collect candidate anchors (with href or rel=next)
-    # - Score them preferring page-based pagination (?page= or page=), rel=next, pagination classes, and "Read more"/"Next" text
-    # - Avoid links that go to unrelated sections (e.g., /events)
-    # - Try navigation via page.goto for stable URL-based pagination; fallback to click+wait_for_navigation
-    previous_url = page.url
-
     try:
-        anchors = await page.query_selector_all("a[href], a[rel='next']")
-    except Exception:
-        anchors = []
+        current_url = page.url
 
-    best_candidate = None
-    best_score = -9999
-
-    for a in anchors:
-        try:
-            href = await a.get_attribute('href')
-            if not href:
-                continue
-            href = href.strip()
-            full_url = urllib.parse.urljoin(page.url, href)
-            # Skip anchors that don't change the page (anchors to same URL or fragment)
-            if full_url == previous_url:
-                # Could still be JS-driven, consider a small negative score but continue
-                pass
-
-            # Gather metadata for scoring
-            cls = (await a.get_attribute('class')) or ''
-            rel = (await a.get_attribute('rel')) or ''
-            text = (await a.text_content()) or ''
-            ltext = text.lower()
-            lhref = href.lower()
-            lcls = cls.lower()
-
-            score = 0
-            if 'page=' in lhref:
-                score += 30
-            if 'rel' in rel.lower() and 'next' in rel.lower():
-                score += 20
-            # class-based indicators
-            if 'pagination' in lcls or 'pagination' in lhref:
-                score += 8
-            if 'section__linkbutton' in lcls or 'linkbutton' in lcls:
-                score += 3
-            # text indicators
-            if 'read more' in ltext or 'readmore' in ltext or 'read more' in text:
-                score += 6
-            if 'next' in ltext and 'page' in ltext:
-                score += 6
-            if 'next' in ltext and score == 0:
-                score += 4
-
-            # Penalize likely irrelevant destinations
-            if '/events' in lhref or '/search' in lhref or 'mailto:' in lhref:
-                score -= 50
-            if lhref.startswith('#'):
-                score -= 50
-
-            # If href leads to a new URL (different from current), give small boost
-            if full_url != previous_url:
-                score += 2
-
-            if score > best_score:
-                best_score = score
-                best_candidate = (a, href, full_url, score)
-        except Exception:
-            continue
-
-    # If we didn't find a scored candidate but there are anchors matching common pagination classes, try them
-    if best_candidate is None or best_score < 0:
-        # fallback selectors (original intent)
-        fallback_selectors = [
-            "a[rel='next']",
-            "a[class*='Pagination__link']",
-            "a[class*='Section__linkButton']",
-            "a[class*='linkButton']",
-            "a[class*='styles_Pagination__link']",
-            "a[class*='styles_Section__linkButton']",
+        # Candidate selectors, prioritized
+        selectors = [
+            'a[rel="next"]',
+            'a[href*="?page="]',
+            'a[href*="page="]',
+            'a.styles_Pagination__link__MAljo',
+            'a.styles_Section__linkButton__y7Z2i'
         ]
-        for sel in fallback_selectors:
-            try:
-                el = await page.query_selector(sel)
-            except Exception:
-                el = None
-            if el:
-                try:
-                    href = await el.get_attribute('href')
-                except Exception:
-                    href = None
-                if href:
-                    full_url = urllib.parse.urljoin(page.url, href.strip())
-                    best_candidate = (el, href.strip(), full_url, 1)
-                    break
-                else:
-                    best_candidate = (el, None, None, 0)
-                    break
 
-    # Attempt to navigate using the best candidate
-    if best_candidate:
-        el, href, full_url, score = best_candidate
-        # Prefer URL-based navigation when href looks like page-based pagination
-        if href:
-            try:
-                # prefer using goto if it will change URL
-                target_url = urllib.parse.urljoin(page.url, href)
-                if target_url != previous_url:
-                    try:
-                        await page.goto(target_url)
-                        try:
-                            await page.wait_for_load_state('networkidle', timeout=8000)
-                        except Exception:
-                            # give a small grace period
-                            await page.wait_for_timeout(1500)
-                        # ensure URL changed; if not, fall back to click
-                        if page.url != previous_url:
-                            return
-                    except Exception:
-                        # goto failed, fall back to click below
-                        pass
+        candidates = []
+        seen_hrefs = set()
+        for sel in selectors:
+            nodes = await page.query_selector_all(sel)
+            for n in nodes:
+                try:
+                    href = await n.get_attribute("href")
+                    if not href:
+                        continue
+                    # dedupe by href
+                    if href in seen_hrefs:
+                        continue
+                    seen_hrefs.add(href)
+                    resolved = urllib.parse.urljoin(current_url, href)
+                    candidates.append((n, href, resolved))
+                except Exception:
+                    continue
 
-                # If target_url == previous_url or goto didn't change, try click
-                try:
-                    await el.scroll_into_view_if_needed()
-                except Exception:
-                    pass
-                try:
-                    # Use a wait_for_navigation to capture single-page-app navigations
-                    try:
-                        await asyncio.wait_for(
-                            asyncio.gather(
-                                page.wait_for_navigation(timeout=8000),
-                                el.click()
-                            ),
-                            timeout=10
-                        )
-                    except Exception:
-                        # If navigation didn't happen, still allow some time for content to update
-                        await page.wait_for_timeout(1500)
-                    return
-                except Exception:
-                    # fallback to simple click without waiting
-                    try:
-                        await el.click()
-                        try:
-                            await page.wait_for_load_state('networkidle', timeout=8000)
-                        except Exception:
-                            await page.wait_for_timeout(1500)
-                        return
-                    except Exception:
-                        pass
-            except Exception:
-                pass
-        else:
-            # Element exists but no href: try clicking it (JS-driven)
+        # Score candidates and pick best one
+        best_candidate = None
+        best_score = -1
+        for node, href, resolved in candidates:
             try:
-                try:
-                    await el.scroll_into_view_if_needed()
-                except Exception:
-                    pass
-                try:
-                    await asyncio.gather(
-                        page.wait_for_navigation(timeout=8000),
-                        el.click()
-                    )
-                    return
-                except Exception:
-                    try:
-                        await el.click()
-                        try:
-                            await page.wait_for_load_state('networkidle', timeout=8000)
-                        except Exception:
-                            await page.wait_for_timeout(1500)
-                        return
-                    except Exception:
-                        pass
+                # ignore links that resolve to current url
+                if resolved == current_url:
+                    continue
+                text = (await node.text_content() or "").strip().lower()
+                score = 0
+                # prefer explicit page parameter links
+                if '?page=' in href or 'page=' in href:
+                    score += 20
+                # textual hints
+                if 'next' in text:
+                    score += 10
+                if 'see more' in text or 'read more' in text or 'more local' in text or 'more' == text:
+                    score += 8
+                # slightly prefer full path vs relative just '?page='
+                if href.startswith('/'):
+                    score += 1
+                # choose highest scored
+                if score > best_score:
+                    best_score = score
+                    best_candidate = (node, href, resolved)
+            except Exception:
+                continue
+
+        if best_candidate:
+            node, href, resolved_url = best_candidate
+
+            # Ensure element is visible / in view
+            try:
+                await node.scroll_into_view_if_needed()
             except Exception:
                 pass
 
-    # Fallback: infinite scroll approach (if no pagination link worked)
-    previous_height = None
-    for _ in range(3):
-        try:
-            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            # Try click with navigation wait (robust for link clicks)
+            try:
+                # If clicking causes navigation, wait for it. If it's a regular link, it should navigate.
+                await asyncio.gather(
+                    page.wait_for_navigation(wait_until="load", timeout=10000),
+                    node.click()
+                )
+                # ensure content loads
+                try:
+                    await page.wait_for_load_state("networkidle", timeout=5000)
+                except Exception:
+                    pass
+                return
+            except Exception:
+                # Clicking didn't trigger navigation or timed out; try goto as fallback
+                try:
+                    await page.goto(resolved_url, wait_until="networkidle", timeout=15000)
+                    return
+                except Exception:
+                    # final fallback: try simple goto without waiting too long
+                    try:
+                        await page.goto(resolved_url)
+                        await page.wait_for_timeout(1000)
+                        return
+                    except Exception:
+                        pass
+
+        # If no suitable candidate or navigation attempts failed, fallback to infinite scroll
+        previous_height = await page.evaluate("() => document.body.scrollHeight")
+        for _ in range(5):
+            await page.evaluate("() => window.scrollTo(0, document.body.scrollHeight)")
             await page.wait_for_timeout(2000)
-            new_height = await page.evaluate("document.body.scrollHeight")
-            if previous_height is not None and new_height == previous_height:
-                break
+            new_height = await page.evaluate("() => document.body.scrollHeight")
+            if new_height == previous_height:
+                # small additional wait in case content loads slowly
+                await page.wait_for_timeout(1500)
+                new_height = await page.evaluate("() => document.body.scrollHeight")
+                if new_height == previous_height:
+                    break
             previous_height = new_height
-        except Exception:
-            await page.wait_for_timeout(2000)
 
-    return
+    except Exception:
+        # On any error, at minimum attempt a basic scroll to trigger dynamic loading
+        try:
+            await page.evaluate("() => window.scrollTo(0, document.body.scrollHeight)")
+            await page.wait_for_timeout(2000)
+        except Exception:
+            pass
 
 
 async def get_first_page(base_url=base_url):
@@ -344,7 +270,8 @@ async def get_all_articles(base_url=base_url, max_pages=100):
             while page_count < max_pages:
                 page_items = await scrape_page(page)
                 for item in page_items:
-                    key = tuple(sorted((k, v) for k, v in item.items() if v is not None))
+                    # Create a dedupe key from title+url+date where available
+                    key = (item.get("title"), item.get("url"), item.get("date"))
                     if key not in seen:
                         seen.add(key)
                         items.append(item)

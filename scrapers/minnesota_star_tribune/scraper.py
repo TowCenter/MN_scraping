@@ -1,10 +1,10 @@
 import json
 import os
-import asyncio
-import urllib.parse
-from dateutil.parser import parse, ParserError
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 from playwright_stealth import Stealth  # v2.0.1 API
+from dateutil.parser import parse
+import urllib.parse
+import asyncio
 
 base_url = 'https://www.startribune.com/news-politics/twin-cities'
 
@@ -14,13 +14,12 @@ SCRAPER_MODULE_PATH = '.'.join(os.path.splitext(os.path.abspath(__file__))[0].sp
 # Operator user-agent (set in operator.json)
 USER_AGENT = ''
 
-
 class PlaywrightContext:
     """Context manager for Playwright browser sessions."""
 
     async def __aenter__(self):
         self.playwright = await async_playwright().start()
-        # Launch headless chromium
+        # Launch in headless mode by default
         self.browser = await self.playwright.chromium.launch()
         context_kwargs = {'user_agent': USER_AGENT} if USER_AGENT else {}
         self.context = await self.browser.new_context(**context_kwargs)
@@ -29,7 +28,6 @@ class PlaywrightContext:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.browser.close()
         await self.playwright.stop()
-
 
 async def scrape_page(page):
     """
@@ -41,236 +39,283 @@ async def scrape_page(page):
     Returns:
         List of dictionaries containing article data with keys:
         - title: Headline or title of the article
-        - date: Publication date in YYYY-MM-DD format (or None)
+        - date: Publication date in YYYY-MM-DD format or None
         - url: Absolute URL to the full article
         - scraper: module path for traceability
     """
     items = []
 
-    # Choose a robust item container selector observed on the page.
-    # Keep selector reasonably general but specific enough to target article cards.
-    container_selectors = [
-        # Primary observed container with responsive grid classes
-        'div.rt-Box.col-span-8.md\\:col-span-5',
-        # Slightly more specific variant
-        'div.rt-Box.col-span-8.md\\:col-span-5.flex.flex-col.gap-2',
-    ]
+    # Find headline elements which reliably identify article entries
+    # Using h3.rt-Heading as observed in page examples
+    headline_handles = await page.query_selector_all("h3.rt-Heading")
 
-    containers = []
-    for sel in container_selectors:
-        nodes = await page.query_selector_all(sel)
-        if nodes:
-            containers = nodes
-            break
-
-    # Fallback: try to find article headline elements and derive container from there
-    if not containers:
-        headline_nodes = await page.query_selector_all('h3.rt-Heading')
-        for hn in headline_nodes:
-            parent = await hn.evaluate_handle('node => node.closest("div")')
-            if parent:
-                # Convert handle to ElementHandle if possible
-                try:
-                    containers.append(parent.as_element())
-                except Exception:
-                    pass
-
-    # If still no containers found, return empty list
-    if not containers:
-        return items
-
-    for c in containers:
+    for h in headline_handles:
         try:
-            # Title: prefer the h3.rt-Heading element within the container
-            title_el = await c.query_selector('h3.rt-Heading')
-            title = None
-            if title_el:
-                raw_title = await title_el.text_content()
-                if raw_title:
-                    title = raw_title.strip()
-            # URL: find the anchor that wraps the headline (anchor containing the h3)
-            url = None
-            anchor = None
-            # Use :has() to locate anchor that contains the h3
-            try:
-                anchor = await c.query_selector('a:has(h3.rt-Heading)')
-            except Exception:
-                # Older playwright versions or selector engine differences fallback:
-                anchors = await c.query_selector_all('a')
-                for a in anchors:
-                    # check if this anchor contains the h3 element
-                    has_h3 = await a.query_selector('h3.rt-Heading')
-                    if has_h3:
-                        anchor = a
-                        break
+            # Get title text using textContent semantics via evaluate (robust regardless of visibility)
+            title = await h.evaluate("el => el.textContent && el.textContent.trim() ? el.textContent.trim() : null")
+            if not title:
+                continue
 
-            if anchor:
-                href = await anchor.get_attribute('href')
-                if href:
-                    url = urllib.parse.urljoin(base_url, href.strip())
+            # Attempt to find a URL related to this headline by:
+            # 1) closest ancestor <a>
+            # 2) first descendant <a> within reasonable ancestor search
+            href = await h.evaluate("""
+                (el) => {
+                    // 1. nearest ancestor anchor
+                    let a = el.closest('a');
+                    if (a && a.getAttribute('href')) return a.getAttribute('href');
+                    // 2. search within up to 8 ancestor levels for a descendant anchor with href
+                    let p = el;
+                    for (let i = 0; i < 8 && p; i++) {
+                        let link = p.querySelector('a[href]');
+                        if (link) return link.getAttribute('href');
+                        p = p.parentElement;
+                    }
+                    return null;
+                }
+            """)
 
-            # Date: attempt to find any text in the container that parses as a date.
-            date = None
-            # Look for likely date-holding spans first by class patterns
-            candidate_selectors = [
-                'div span.rt-Text.font-utility-label-reg-caps-02',  # observed in examples
-                'div span.rt-Text.font-utility-label-reg-caps-02.text-text-tertiary',
-                'div span.rt-Text.font-utility-label-reg-caps-02.text-text-tertiary',
-                'div span.rt-Text',  # general fallback
-                'span',  # broad fallback
-            ]
-            parsed = False
-            # Collect unique text candidates to avoid repeated parsing attempts
-            seen_texts = set()
-            for cs in candidate_selectors:
-                nodes = await c.query_selector_all(cs)
-                for n in nodes:
-                    try:
-                        txt = await n.text_content()
-                    except Exception:
-                        txt = None
-                    if not txt:
-                        continue
-                    txt = txt.strip()
-                    if not txt or txt in seen_texts:
-                        continue
-                    seen_texts.add(txt)
-                    # Try to parse any candidate text as a date
-                    try:
-                        dt = parse(txt, fuzzy=True, default=None)
-                        # dateutil.parse with default=None raises TypeError; handle using try/except
-                        if dt:
-                            # Ensure parsed object has a year (dateutil will set year if not present)
-                            # Format as YYYY-MM-DD
-                            date = dt.date().isoformat()
-                            parsed = True
-                            break
-                    except (ParserError, TypeError, ValueError):
-                        continue
-                if parsed:
-                    break
+            if not href:
+                # Could not find a URL for this headline; skip this item
+                continue
 
-            # As last resort, search for any element text that looks like "Month Day, Year"
-            if not parsed:
-                all_text = await c.text_content() or ''
-                # Try to find a substring that looks like month pattern using dateutil fuzzy parsing
+            # Normalize to absolute URL
+            url = urllib.parse.urljoin(page.url or base_url, href)
+
+            # Attempt to locate a date string near the headline:
+            # search up the DOM tree up to several levels for known date selectors
+            date_text = await h.evaluate("""
+                (el) => {
+                    let selectors = ['span.font-utility-label-reg-caps-02', 'div.font-utility-label-reg-caps-03', 'time', 'span.rt-Text'];
+                    let p = el;
+                    for (let depth = 0; depth < 8 && p; depth++) {
+                        for (let s of selectors) {
+                            let found = p.querySelector(s);
+                            if (found && found.textContent && found.textContent.trim()) {
+                                return found.textContent.trim();
+                            }
+                        }
+                        p = p.parentElement;
+                    }
+                    return null;
+                }
+            """)
+
+            date_iso = None
+            if date_text:
+                # Try to parse human readable date into YYYY-MM-DD
                 try:
-                    dt = parse(all_text, fuzzy=True)
-                    if dt:
-                        date = dt.date().isoformat()
+                    dt = parse(date_text, fuzzy=True)
+                    date_iso = dt.date().isoformat()
                 except Exception:
-                    date = None
+                    date_iso = None
 
-            # Build item only if title and url present (title and url are required)
-            if title and url:
-                items.append({
-                    'title': title,
-                    'date': date if date else None,
-                    'url': url,
-                    'scraper': SCRAPER_MODULE_PATH,
-                })
+            items.append({
+                'title': title,
+                'date': date_iso,
+                'url': url,
+                'scraper': SCRAPER_MODULE_PATH,
+            })
 
         except Exception:
-            # Skip individual container errors but continue processing others
+            # Skip problematic headline elements but continue scraping others
             continue
 
     return items
 
-
 async def advance_page(page):
     """
     Finds the next page button or link to navigate to the next page of articles.
-    Clicks button or navigates to next page URL if found. Scroll load more button into view if not visible.
-    Defaults to infinite scroll if no pagination found.
+    Clicks button or navigates to next page URL if found. Scrolls load more button into view if not visible.
+    Falls back to infinite scroll if no pagination found.
 
     Parameters:
         page: Playwright page object
     """
-    # Try to find an explicit "Load More" or pagination button first.
+    # Helper to get current article count reliably
+    async def get_heading_count():
+        return await page.evaluate("() => document.querySelectorAll('h3.rt-Heading').length")
+
+    # Primary approach: look for a "Load More" button (various selectors) and click it,
+    # then wait until the number of headings increases.
     try:
-        # Prefer button with visible "Load More" text
-        load_more_btn = await page.query_selector('button:has-text("Load More")')
-        if load_more_btn:
-            try:
-                await load_more_btn.scroll_into_view_if_needed()
-            except Exception:
-                pass
-            try:
-                await load_more_btn.click()
-            except Exception:
-                # Some sites may require evaluating click in page context
-                await page.evaluate('(el) => el.click()', load_more_btn)
-            # Wait briefly for additional content to load
-            try:
-                await page.wait_for_load_state('networkidle', timeout=5000)
-            except Exception:
-                await page.wait_for_timeout(2000)
-            return
+        before = await get_heading_count()
 
-        # Try the observed specific class for the load more button as a fallback
-        load_more_btn2 = await page.query_selector('button.Button_secondary-default-mode__yzoDW')
-        if load_more_btn2:
-            try:
-                await load_more_btn2.scroll_into_view_if_needed()
-            except Exception:
-                pass
-            try:
-                await load_more_btn2.click()
-            except Exception:
-                await page.evaluate('(el) => el.click()', load_more_btn2)
-            try:
-                await page.wait_for_load_state('networkidle', timeout=5000)
-            except Exception:
-                await page.wait_for_timeout(2000)
-            return
+        # Build candidate element list: prioritize observed specific selector, then data-testid, then any button/a
+        candidates = []
 
-        # If there's an anchor-based "next" link (rare on this site), click it
-        next_link = await page.query_selector('a[rel="next"], a:has-text("Next")')
-        if next_link:
-            href = await next_link.get_attribute('href')
-            if href:
-                next_url = urllib.parse.urljoin(page.url, href)
-                await page.goto(next_url)
+        # Try specific observed class first
+        try:
+            el = await page.query_selector("button.Button_secondary-default-mode__yzoDW")
+            if el:
+                candidates.append(el)
+        except Exception:
+            pass
+
+        # Try data-testid button(s)
+        try:
+            els = await page.query_selector_all("button[data-testid='text-button']")
+            for e in els:
+                candidates.append(e)
+        except Exception:
+            pass
+
+        # Add all buttons and anchors as broader fallback to search their text content
+        try:
+            els = await page.query_selector_all("button, a")
+            for e in els:
+                candidates.append(e)
+        except Exception:
+            pass
+
+        # Deduplicate handles while preserving order
+        seen_handles = set()
+        unique_candidates = []
+        for h in candidates:
+            try:
+                hid = await h.evaluate("e => e.outerHTML")
+            except Exception:
+                hid = None
+            if hid and hid not in seen_handles:
+                seen_handles.add(hid)
+                unique_candidates.append(h)
+
+        for el in unique_candidates:
+            try:
+                txt = await el.evaluate("e => (e.textContent || '').trim().toLowerCase()")
+            except Exception:
+                txt = ''
+            if not txt:
+                # Also check for any descendant text nodes (safer)
                 try:
-                    await page.wait_for_load_state('networkidle', timeout=5000)
+                    txt = await el.evaluate("e => (e.innerText || '').trim().toLowerCase()")
                 except Exception:
-                    await page.wait_for_timeout(2000)
-                return
-            else:
+                    txt = ''
+            if 'load more' in txt or txt == 'more' or 'show more' in txt or 'view more' in txt:
                 try:
-                    await next_link.scroll_into_view_if_needed()
+                    await el.scroll_into_view_if_needed()
                 except Exception:
                     pass
+                # Try clicking; if it triggers XHR and DOM update, wait for increased headings
+                clicked = False
                 try:
-                    await next_link.click()
+                    await el.click()
+                    clicked = True
+                except PlaywrightTimeoutError:
+                    try:
+                        await el.evaluate("e => e.click()")
+                        clicked = True
+                    except Exception:
+                        clicked = False
                 except Exception:
-                    await page.evaluate('(el) => el.click()', next_link)
+                    # fallback to JS click
+                    try:
+                        await el.evaluate("e => e.click()")
+                        clicked = True
+                    except Exception:
+                        clicked = False
+
+                if clicked:
+                    # Wait for headings count to increase, which indicates new content loaded
+                    try:
+                        await page.wait_for_function(
+                            f"() => document.querySelectorAll('h3.rt-Heading').length > {before}",
+                            timeout=10000
+                        )
+                        return
+                    except PlaywrightTimeoutError:
+                        # allow fallback attempts below
+                        pass
+                    except Exception:
+                        pass
+
+        # Secondary: look for any anchor with rel=next or a pagination link text
+        try:
+            next_link = await page.query_selector("a[rel='next']")
+            if next_link:
+                href = await next_link.get_attribute('href')
+                if href:
+                    next_url = urllib.parse.urljoin(page.url or base_url, href)
+                    try:
+                        # navigate and wait for load
+                        await page.goto(next_url)
+                        return
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+        # Tertiary: as a last attempt, find any anchor/button containing the word "more" even if not exact
+        try:
+            possible = await page.query_selector_all("a, button")
+            for el in possible:
                 try:
-                    await page.wait_for_load_state('networkidle', timeout=5000)
+                    txt = await el.evaluate("e => (e.textContent || '').trim().toLowerCase()")
+                    if not txt:
+                        txt = await el.evaluate("e => (e.innerText || '').trim().toLowerCase()")
+                    if not txt:
+                        continue
+                    if 'more' in txt:
+                        try:
+                            await el.scroll_into_view_if_needed()
+                        except Exception:
+                            pass
+                        try:
+                            await el.click()
+                        except PlaywrightTimeoutError:
+                            try:
+                                await el.evaluate("e => e.click()")
+                            except Exception:
+                                pass
+                        except Exception:
+                            try:
+                                await el.evaluate("e => e.click()")
+                            except Exception:
+                                pass
+
+                        # wait for DOM update
+                        try:
+                            await page.wait_for_function(
+                                f"() => document.querySelectorAll('h3.rt-Heading').length > {before}",
+                                timeout=10000
+                            )
+                            return
+                        except PlaywrightTimeoutError:
+                            continue
+                        except Exception:
+                            continue
                 except Exception:
-                    await page.wait_for_timeout(2000)
-                return
+                    continue
+        except Exception:
+            pass
 
     except Exception:
-        # If any of the above attempts throw, fall through to infinite scroll fallback
+        # If anything unexpected happens, fall back to infinite scroll below
         pass
 
-    # Fallback: infinite scroll behavior
-    # Scroll to bottom, wait for content to load. Repeat a small number of times to allow lazy loading.
+    # Fallback: infinite scroll - perform a scroll to bottom and wait for new content
     try:
-        previous_height = await page.evaluate('() => document.body.scrollHeight')
-        for _ in range(3):
-            await page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
-            await page.wait_for_timeout(2000)  # allow lazy-loaded content to load
-            new_height = await page.evaluate('() => document.body.scrollHeight')
-            if new_height == previous_height:
-                # no more content loaded
-                break
-            previous_height = new_height
+        before = await get_heading_count()
+        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        await asyncio.sleep(2)  # wait for lazy-load
+        try:
+            await page.wait_for_function(
+                f"() => document.querySelectorAll('h3.rt-Heading').length > {before}",
+                timeout=8000
+            )
+            return
+        except PlaywrightTimeoutError:
+            # Try a couple more scroll attempts
+            attempts = 3
+            for _ in range(attempts):
+                await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                await asyncio.sleep(2)
+                after = await get_heading_count()
+                if after > before:
+                    return
     except Exception:
-        # As final fallback, just wait briefly
-        await page.wait_for_timeout(2000)
-
+        # Nothing else to do
+        return
 
 async def get_first_page(base_url=base_url):
     """Fetch only the first page of articles."""
@@ -282,10 +327,8 @@ async def get_first_page(base_url=base_url):
         await page.close()
         return items
 
-
 async def get_all_articles(base_url=base_url, max_pages=100):
     """Fetch all articles from all pages."""
-
     async with PlaywrightContext() as context:
         items = []
         seen = set()
@@ -303,14 +346,13 @@ async def get_all_articles(base_url=base_url, max_pages=100):
             while page_count < max_pages:
                 page_items = await scrape_page(page)
                 for item in page_items:
-                    # Create a deterministic key from the item dict to deduplicate
-                    key = tuple(sorted((k, v) for k, v in item.items() if v is not None))
+                    # create a de-duplication key based on title+url+date (None allowed)
+                    key = (item.get('title'), item.get('url'), item.get('date'))
                     if key not in seen:
                         seen.add(key)
                         items.append(item)
                 new_item_count = len(items)
 
-                # If no new items were added this iteration, stop pagination
                 if new_item_count <= item_count:
                     break
 
@@ -325,7 +367,6 @@ async def get_all_articles(base_url=base_url, max_pages=100):
         await page.close()
         return items
 
-
 async def main():
     """Main execution function."""
     all_items = await get_all_articles()
@@ -335,7 +376,6 @@ async def main():
     with open(result_path, 'w') as f:
         json.dump(all_items, f, indent=2)
     print(f"Results saved to {result_path}")
-
 
 if __name__ == "__main__":
     asyncio.run(main())

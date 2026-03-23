@@ -1,456 +1,234 @@
-"""
-Articles Scraper for Axios Twin Cities
-
-Generated at: 2026-03-10 14:36:21
-Target URL: https://www.axios.com/local/twin-cities/news
-Generated using: gpt-5-mini-2025-08-07
-Content type: articles
-Fields: title, date, url
-
-"""
-
 import json
 import os
-import re
 import urllib.parse
-from playwright.async_api import async_playwright
-from playwright_stealth import Stealth  # v2.0.1 API
-from dateutil.parser import parse
 import asyncio
+from dateutil.parser import parse
+from playwright.async_api import async_playwright
 
 base_url = 'https://www.axios.com/local/twin-cities/news'
 
 # Scraper module path for tracking the source of scraped data
-SCRAPER_MODULE_PATH = '.'.join(os.path.splitext(os.path.abspath(__file__))[0].split(os.sep)[-3:])
+try:
+    SCRAPER_MODULE_PATH = '.'.join(
+        os.path.splitext(os.path.abspath(__file__))[0].split(os.sep)[-3:]
+    )
+except Exception:
+    SCRAPER_MODULE_PATH = 'scrapers.axios.twin_cities'
 
-# Operator user-agent (set in operator.json)
+# Operator user-agent (set in operator.json). Provide a sensible default to reduce detection.
 USER_AGENT = ''
+
+if not USER_AGENT:
+    USER_AGENT = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/121.0.0.0 Safari/537.36"
+    )
+
 
 class PlaywrightContext:
     """Context manager for Playwright browser sessions."""
 
     async def __aenter__(self):
         self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.launch(headless=False)
-        context_kwargs = {'user_agent': USER_AGENT} if USER_AGENT else {}
+        # Launch headless to avoid requiring a display in test environments
+        self.browser = await self.playwright.chromium.launch(headless=True)
+        context_kwargs = {'user_agent': USER_AGENT}
+        # Create a context with the desired UA; keep other defaults
         self.context = await self.browser.new_context(**context_kwargs)
         return self.context
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.browser.close()
-        await self.playwright.stop()
+        try:
+            await self.context.close()
+        except Exception:
+            pass
+        try:
+            await self.browser.close()
+        except Exception:
+            pass
+        try:
+            await self.playwright.stop()
+        except Exception:
+            pass
+
 
 async def scrape_page(page):
     """
     Extract article data from the current page.
 
-    Parameters:
-        page: Playwright page object
-
-    Returns:
-        List of dictionaries containing article data with keys:
-        - title: Headline or title of the article
-        - date: Publication date in YYYY-MM-DD format or None
-        - url: Link to the full article
-        - scraper: module path for traceability
+    Returns list of dicts with keys: title, date, url, scraper
     """
     items = []
 
-    # Strategy:
-    # - Find article anchors with data-cy="story-promo-headline"
-    # - Get title from the <h2> inside the anchor (or anchor text)
-    # - Get date by looking for a nearby p[data-cy="timestamp"] or time element inside the same <li>
-    # - If timestamp is relative (contains "ago", "hour", etc.), try to extract date from the article URL (common Axios pattern /YYYY/MM/DD/)
-    # - Normalize URL to absolute using base_url
+    try:
+        anchors = await page.query_selector_all(
+            'a[data-cy="story-promo-headline"], a.group[data-cy="story-promo-headline"]'
+        )
+    except Exception:
+        anchors = []
 
-    anchors = await page.query_selector_all('a[data-cy="story-promo-headline"][href]')
     for a in anchors:
         try:
-            # URL
             href = await a.get_attribute('href')
             if not href:
                 continue
-            url = urllib.parse.urljoin(base_url, href)
+            url = urllib.parse.urljoin(base_url, href.strip())
 
-            # Title: prefer h2 text, fallback to anchor text content
-            title_text = None
-            h2 = await a.query_selector('h2')
-            if h2:
-                title_text = (await h2.text_content()) or ''
-            if not title_text:
-                title_text = (await a.text_content()) or ''
-            title = title_text.strip() if title_text else None
+            title = None
+            title_el = await a.query_selector('h2 span.h-editorial-040, span.h-editorial-040, h2')
+            if title_el:
+                raw_title = await title_el.text_content()
+                if raw_title:
+                    title = raw_title.strip()
             if not title:
-                # skip items without titles
+                raw_title = await a.text_content()
+                title = raw_title.strip() if raw_title else None
+
+            if not title:
                 continue
 
-            # Date: search within closest li for a timestamp or time element
-            date_text = await page.evaluate(
-                """(el) => {
-                    const li = el.closest('li');
-                    if (!li) return null;
-                    // Prefer explicit timestamp or time element; use common classes as fallback
-                    const selectors = [
-                        'time',
-                        'p[data-cy=\"timestamp\"]',
-                        'p.label-utility-020-thin',
-                        'p.mb-1',
-                        'span.timestamp',
-                        'div.timestamp'
-                    ];
-                    for (const sel of selectors) {
-                        const node = li.querySelector(sel);
-                        if (node && node.textContent && node.textContent.trim()) {
-                            return node.textContent.trim();
-                        }
-                    }
-                    return null;
-                }""",
-                a
-            )
-
-            date_iso = None
-            # Helper: try to parse human-readable absolute dates
-            def try_parse_date(txt):
+            date_value = None
+            # Look for timestamp inside anchor
+            date_el = await a.query_selector('p[data-cy="timestamp"], time, .label-utility-020-thin')
+            if not date_el:
+                # check parent element for timestamp
                 try:
-                    dt = parse(txt, fuzzy=True)
-                    return dt.date().isoformat()
+                    parent_handle = await a.evaluate_handle("el => el.parentElement")
+                    parent_el = parent_handle.as_element() if parent_handle else None
+                    if parent_el:
+                        date_el = await parent_el.query_selector(
+                            'p[data-cy="timestamp"], time, .label-utility-020-thin'
+                        )
                 except Exception:
-                    return None
+                    date_el = None
 
-            if date_text:
-                # If date_text contains relative indicators, avoid parsing directly
-                if re.search(r'\b(ago|hour|hours|minute|minutes|yesterday|today)\b', date_text, re.I):
-                    date_iso = None
-                else:
-                    date_iso = try_parse_date(date_text)
-
-            # If we still don't have a date, try to extract from URL: /YYYY/MM/DD/ or /YYYY/MM/DD
-            if not date_iso:
-                m = re.search(r'/(\d{4})/(\d{2})/(\d{2})/', href)
-                if not m:
-                    # try also when URL ends with /YYYY/MM/DD or contains /YYYY/MM/DD-
-                    m = re.search(r'/(\d{4})/(\d{2})/(\d{2})(?:$|/|[-_])', href)
-                if m:
-                    y, mo, d = m.group(1), m.group(2), m.group(3)
+            if date_el:
+                raw_date = await date_el.text_content()
+                if raw_date:
+                    raw_date = raw_date.strip()
                     try:
-                        date_iso = f"{int(y):04d}-{int(mo):02d}-{int(d):02d}"
+                        parsed = parse(raw_date, fuzzy=True)
+                        if parsed.year and parsed.year > 1900:
+                            date_value = parsed.date().isoformat()
                     except Exception:
-                        date_iso = None
+                        date_value = None
 
             items.append({
                 'title': title,
-                'date': date_iso,
+                'date': date_value,
                 'url': url,
                 'scraper': SCRAPER_MODULE_PATH,
             })
 
         except Exception:
-            # Skip malformed item but continue processing others
             continue
 
     return items
 
+
 async def advance_page(page):
     """
-    Finds the next page button or link to navigate to the next page of articles.
-    Clicks button or navigates to next page URL if found. Scroll load more button into view if not visible.
-    Defaults to infinite scroll if no pagination found.
-
-    Parameters:
-        page: Playwright page object
+    Attempts to advance to the next page of results. Tries explicit pagination controls first,
+    then falls back to a scroll-to-bottom attempt.
     """
-    # Helper selector for article anchors
-    ARTICLE_SEL = 'a[data-cy="story-promo-headline"][href]'
+    keywords = ['load more', 'show more', 'see more', 'more', 'next', 'older', 'older posts', 'view more']
 
-    # Get current article count so we can detect if clicking loads more
     try:
-        pre_anchors = await page.query_selector_all(ARTICLE_SEL)
-        pre_count = len(pre_anchors)
-    except Exception:
-        pre_count = 0
-
-    # Utility to check if an element is visible
-    async def is_visible(el):
-        try:
-            return await page.evaluate(
-                '(e) => !!(e && (e.offsetWidth || e.offsetHeight || e.getClientRects().length))',
-                el
-            )
-        except Exception:
-            return False
-
-    # Avoid clicking elements that are clearly auth/subscribe related
-    def looks_like_auth(text, aria, data_cy, cls):
-        text_l = (text or '').lower()
-        aria_l = (aria or '').lower()
-        dc = (data_cy or '').lower()
-        c = (cls or '').lower()
-        if any(k in text_l for k in ['login', 'log in', 'sign in', 'subscribe', 'account']):
-            return True
-        if any(k in aria_l for k in ['login', 'sign in', 'subscribe', 'account']):
-            return True
-        if 'local-login' in dc or 'login' in dc:
-            return True
-        if 'login' in c:
-            return True
-        return False
-
-    # Prefer explicit pagination / load-more elements first with robust heuristics
-    try:
-        # Try common explicit selectors that likely represent loading more content or navigation
-        explicit_selectors = [
-            'a[rel="next"]',
-            'a.pagination-next',
-            'a[aria-label="Next"]',
-            'a[aria-label*="next"]',
-            'button.load-more',
-            'button[data-cy*="load-more"]',
-            'button[data-cy*="more"]',
-            'button.bttn',
-            'a:has-text("More")',
-            'button:has-text("More")',
-            'a:has-text("Load more")',
-            'button:has-text("Load more")',
-            'a:has-text("Show more")',
-            'button:has-text("Show more")',
-        ]
-
-        # First pass: try explicit selectors but validate they are not auth widgets
-        for sel in explicit_selectors:
-            try:
-                el = await page.query_selector(sel)
-            except Exception:
-                el = None
-            if not el:
-                continue
-            try:
-                text = (await el.text_content() or '').strip()
-            except Exception:
-                text = ''
-            try:
-                aria = (await el.get_attribute('aria-label') or '').strip()
-            except Exception:
-                aria = ''
-            try:
-                data_cy = (await el.get_attribute('data-cy') or '').strip()
-            except Exception:
-                data_cy = ''
-            try:
-                cls = (await el.get_attribute('class') or '').strip()
-            except Exception:
-                cls = ''
-            # Skip auth buttons
-            if looks_like_auth(text, aria, data_cy, cls):
-                continue
-            # Ensure element is visible
-            if not await is_visible(el):
-                # try to scroll into view anyway; sometimes off-screen but still clickable
-                try:
-                    await el.scroll_into_view_if_needed()
-                except Exception:
-                    pass
-                if not await is_visible(el):
-                    continue
-            # Try clicking and wait for new content or navigation
-            try:
-                initial_url = page.url
-                await el.scroll_into_view_if_needed()
-                try:
-                    await el.click(timeout=3000)
-                except Exception:
-                    # fallback to DOM click
-                    try:
-                        await page.evaluate('(e) => e.click()', el)
-                    except Exception:
-                        pass
-                # Wait for either new articles to appear or navigation
-                try:
-                    await page.wait_for_function(
-                        "sel, prev => document.querySelectorAll(sel).length > prev",
-                        ARTICLE_SEL,
-                        pre_count,
-                        timeout=8000
-                    )
-                    return
-                except Exception:
-                    # maybe navigation happened
-                    try:
-                        await page.wait_for_load_state('networkidle', timeout=5000)
-                    except Exception:
-                        await page.wait_for_timeout(2000)
-                    # check if url changed or more items
-                    if page.url != initial_url:
-                        # navigation occurred; consider success
-                        return
-                    # final check of article count
-                    try:
-                        post_anchors = await page.query_selector_all(ARTICLE_SEL)
-                        if len(post_anchors) > pre_count:
-                            return
-                    except Exception:
-                        pass
-                    # if nothing changed, continue trying other candidates
-                    continue
-            except Exception:
-                continue
-
-        # Second pass: scan all anchors and buttons with broader heuristics
-        candidates = await page.query_selector_all('a, button')
+        candidates = await page.query_selector_all('button, a')
         for el in candidates:
             try:
-                text = (await el.text_content() or '').strip()
-            except Exception:
-                text = ''
-            try:
-                aria = (await el.get_attribute('aria-label') or '').strip()
-            except Exception:
-                aria = ''
-            try:
-                rel = (await el.get_attribute('rel') or '').strip()
-            except Exception:
-                rel = ''
-            try:
-                data_cy = (await el.get_attribute('data-cy') or '').strip()
-            except Exception:
-                data_cy = ''
-            try:
-                cls = (await el.get_attribute('class') or '').strip()
-            except Exception:
-                cls = ''
-            try:
-                href = (await el.get_attribute('href') or '').strip()
-            except Exception:
-                href = ''
-
-            # skip auth-like controls
-            if looks_like_auth(text, aria, data_cy, cls):
-                continue
-
-            # Heuristics to detect next/load more
-            is_next = False
-            if 'next' in rel.lower() or 'next' in aria.lower():
-                is_next = True
-            # textual heuristics
-            t_lower = text.lower()
-            if any(kw in t_lower for kw in ['load more', 'loadmore', 'show more', 'see more', 'more', 'next']):
-                # ensure it's not a very short "more" used in unrelated places with no visibility
-                is_next = True
-            if 'load-more' in data_cy or 'loadmore' in data_cy or 'feed-load' in data_cy:
-                is_next = True
-            if any(kw in cls.lower() for kw in ['load', 'more', 'next', 'pagination', 'pager', 'bttn']):
-                is_next = True
-
-            if not is_next:
-                continue
-
-            # check visibility
-            if not await is_visible(el):
-                try:
-                    await el.scroll_into_view_if_needed()
-                except Exception:
-                    pass
-                if not await is_visible(el):
+                if not await el.is_visible():
+                    continue
+                text = await el.text_content()
+                if not text:
+                    continue
+                text_l = text.strip().lower()
+                match = any(k in text_l for k in keywords)
+                if not match:
+                    data_cy = await el.get_attribute('data-cy')
+                    if data_cy and ('more' in data_cy or 'load' in data_cy or 'next' in data_cy):
+                        match = True
+                if not match:
                     continue
 
-            # Attempt click / navigation
-            try:
-                initial_url = page.url
-                await el.scroll_into_view_if_needed()
-                try:
-                    await el.click(timeout=3000)
-                except Exception:
-                    # fallback DOM click
-                    try:
-                        await page.evaluate('(e) => e.click()', el)
-                    except Exception:
-                        pass
-
-                # Wait for new content or navigation
-                try:
-                    await page.wait_for_function(
-                        "sel, prev => document.querySelectorAll(sel).length > prev",
-                        ARTICLE_SEL,
-                        pre_count,
-                        timeout=8000
-                    )
-                    return
-                except Exception:
-                    try:
-                        await page.wait_for_load_state('networkidle', timeout=5000)
-                    except Exception:
-                        await page.wait_for_timeout(2000)
-                    if page.url != initial_url:
+                tag = await el.evaluate("(e) => e.tagName.toLowerCase()")
+                if tag == 'a':
+                    href = await el.get_attribute('href')
+                    if href:
+                        next_url = urllib.parse.urljoin(base_url, href.strip())
+                        try:
+                            await page.goto(next_url, wait_until='networkidle', timeout=15000)
+                        except Exception:
+                            try:
+                                await el.scroll_into_view_if_needed()
+                                await el.click()
+                                await page.wait_for_load_state('networkidle', timeout=10000)
+                            except Exception:
+                                pass
                         return
+                else:
                     try:
-                        post_anchors = await page.query_selector_all(ARTICLE_SEL)
-                        if len(post_anchors) > pre_count:
-                            return
+                        await el.scroll_into_view_if_needed()
+                        await el.click()
+                        await page.wait_for_load_state('networkidle', timeout=10000)
+                        await page.wait_for_timeout(1500)
+                        return
                     except Exception:
-                        pass
-                    continue
+                        try:
+                            await asyncio.gather(page.wait_for_navigation(timeout=10000), el.click())
+                            return
+                        except Exception:
+                            continue
             except Exception:
                 continue
-
-        # If we reach here, no explicit "next" was found or clicking didn't produce more content
     except Exception:
-        # unexpected errors – fall back to infinite scroll below
         pass
 
-    # Infinite scroll fallback: attempt a few scrolls until height stabilizes
+    # Fallback: infinite scroll attempt
     try:
-        last_height = await page.evaluate('() => document.body.scrollHeight')
-        for _ in range(6):
-            await page.evaluate('() => window.scrollTo(0, document.body.scrollHeight)')
-            # allow potential lazy-loaded content to load
+        previous_height = await page.evaluate("() => document.body.scrollHeight")
+        await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+        await page.wait_for_timeout(3000)
+        new_height = await page.evaluate("() => document.body.scrollHeight")
+        if new_height == previous_height:
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
             await page.wait_for_timeout(2000)
-            new_height = await page.evaluate('() => document.body.scrollHeight')
-            if new_height == last_height:
-                # small extra wait to let any JS trigger
-                await page.wait_for_timeout(1000)
-                new_height2 = await page.evaluate('() => document.body.scrollHeight')
-                if new_height2 == last_height:
-                    break
-                else:
-                    last_height = new_height2
-            else:
-                last_height = new_height
     except Exception:
-        # If scroll fails, simply wait briefly
         await page.wait_for_timeout(2000)
-    # end advance_page
+    return
+
 
 async def get_first_page(base_url=base_url):
     """Fetch only the first page of articles."""
     async with PlaywrightContext() as context:
         page = await context.new_page()
-        await Stealth().apply_stealth_async(page)
-        await page.goto(base_url)
+        await page.goto(base_url, wait_until='networkidle', timeout=15000)
         items = await scrape_page(page)
         await page.close()
         return items
 
-async def get_all_articles(base_url=base_url, max_pages=100):
-    """Fetch all articles from all pages."""
 
+async def get_all_articles(base_url=base_url, max_pages=100):
+    """Fetch all articles from paginated/list pages."""
     async with PlaywrightContext() as context:
         items = []
         seen = set()
         page = await context.new_page()
-        await Stealth().apply_stealth_async(page)
         page_count = 0
+        item_count = 0
+        new_item_count = 0
 
-        await page.goto(base_url)
-
-        page_count = 0
-        item_count = 0  # previous count
-        new_item_count = 0  # current count
+        await page.goto(base_url, wait_until='networkidle', timeout=15000)
 
         try:
             while page_count < max_pages:
                 page_items = await scrape_page(page)
                 for item in page_items:
-                    key = tuple(sorted((k, v) for k, v in item.items() if v is not None))
+                    # dedupe using URL (preferred) and title fallback
+                    key = item.get('url') or item.get('title')
+                    if not key:
+                        continue
                     if key not in seen:
                         seen.add(key)
                         items.append(item)
@@ -465,21 +243,35 @@ async def get_all_articles(base_url=base_url, max_pages=100):
                 await advance_page(page)
 
         except Exception as e:
-            print(f"Error occurred while getting next page: {e}")
+            # Print a concise error for debugging without raising
+            print(f"Error occurred while paginating: {e}")
 
-
-        await page.close()
+        try:
+            await page.close()
+        except Exception:
+            pass
         return items
 
+
 async def main():
-    """Main execution function."""
     all_items = await get_all_articles()
 
-    # Save results to JSON
     result_path = os.path.join(os.path.dirname(__file__), 'result.json')
-    with open(result_path, 'w') as f:
-        json.dump(all_items, f, indent=2)
-    print(f"Results saved to {result_path}")
+    try:
+        with open(result_path, 'w', encoding='utf-8') as f:
+            json.dump(all_items, f, indent=2, ensure_ascii=False)
+        print(f"Results saved to {result_path}")
+    except Exception as e:
+        print(f"Failed to write results: {e}")
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except RuntimeError:
+        # If an event loop is already running (e.g., in certain test harnesses), create a task instead
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            loop.create_task(main())
+        else:
+            loop.run_until_complete(main())

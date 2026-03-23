@@ -1,122 +1,34 @@
 import json
 import os
-from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import async_playwright
 from playwright_stealth import Stealth  # v2.0.1 API
 from dateutil.parser import parse
 import urllib.parse
 import asyncio
-from typing import List
 
 base_url = 'https://hbctv.net/category/3hmongtv-news/'
 
 # Scraper module path for tracking the source of scraped data
 SCRAPER_MODULE_PATH = '.'.join(os.path.splitext(os.path.abspath(__file__))[0].split(os.sep)[-3:])
 
-# Operator user-agent (set in operator.json). Provide a sensible default to avoid blocking.
-USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-
-# Broad set of possible article container selectors commonly used by news sites / Wordpress themes.
-ITEM_SELECTORS = [
-    "article",                 # semantic article tag
-    ".post",                   # common post class
-    ".post-item",
-    ".post-wrap",
-    ".post-block",
-    ".article",
-    ".entry",
-    ".entry-item",
-    ".entry-wrap",
-    ".td_module_wrap",         # td themes
-    ".jeg_post",               # jeg theme
-    ".item",                   # generic item
-    ".listing-item",
-    ".news-item",
-    ".blog-item",
-    ".archive-item",
-    ".card",                   # card-based layouts
-]
-# Combined selector string used for query_selector_all
-COMBINED_ITEM_SELECTOR = ",".join(ITEM_SELECTORS)
-
-# Candidate selectors for "next page" and "load more" controls.
-NEXT_PAGE_LINK_SELECTORS = [
-    'a[rel="next"]',
-    'a.next',
-    'a.next.page-numbers',
-    '.nav-next a',
-    'a.pagination-next',
-    '.pagination .next a',
-    'a[aria-label="next"]',
-]
-LOAD_MORE_BUTTON_SELECTORS = [
-    'button.load-more',
-    'a.load-more',
-    '.load-more a',
-    '.load_more',
-    'button.more',
-    '.btn-load-more',
-    '.infinite-load button',
-]
-
+# Operator user-agent (set in operator.json)
+USER_AGENT = ''
 
 class PlaywrightContext:
     """Context manager for Playwright browser sessions."""
 
     async def __aenter__(self):
         self.playwright = await async_playwright().start()
-        # Use headless to be CI-friendly
-        self.browser = await self.playwright.chromium.launch(headless=True)
-        context_kwargs = {}
-        if USER_AGENT:
-            context_kwargs['user_agent'] = USER_AGENT
-        # create a persistent browser context
+        self.browser = await self.playwright.chromium.launch()
+        context_kwargs = {'user_agent': USER_AGENT} if USER_AGENT else {}
         self.context = await self.browser.new_context(**context_kwargs)
         return self.context
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        try:
-            await self.context.close()
-        except Exception:
-            pass
         await self.browser.close()
         await self.playwright.stop()
 
-
-async def _safe_text(el):
-    """Return stripped text_content of element or None if not available."""
-    try:
-        if el is None:
-            return None
-        txt = await el.text_content()
-        if txt is None:
-            return None
-        return txt.strip()
-    except Exception:
-        return None
-
-
-async def _safe_attr(el, name):
-    """Return attribute value or None safely."""
-    try:
-        if el is None:
-            return None
-        return await el.get_attribute(name)
-    except Exception:
-        return None
-
-
-async def _parse_date_string(date_str):
-    """Try to parse a date string and return YYYY-MM-DD or None."""
-    if not date_str:
-        return None
-    try:
-        dt = parse(date_str, fuzzy=True)
-        return dt.date().isoformat()
-    except Exception:
-        return None
-
-
-async def scrape_page(page) -> List[dict]:
+async def scrape_page(page):
     """
     Extract article data from the current page.
 
@@ -126,180 +38,170 @@ async def scrape_page(page) -> List[dict]:
     Returns:
         List of dictionaries containing article data with keys:
         - title: Headline or title of the article
-        - date: Publication date in YYYY-MM-DD format or None
+        - date: Publication date in YYYY-MM-DD format (optional — None if not found)
         - url: Link to the full article
         - scraper: module path for traceability
     """
     items = []
-    seen_urls = set()
 
-    # ensure page has settled a bit
-    try:
-        await page.wait_for_load_state('networkidle', timeout=10000)
-    except Exception:
-        pass
+    # Strategy:
+    # - Select anchors that use the common class seen on the site: a.text-navy-200
+    # - Filter out social/external links (facebook, twitter, youtube, mailto, tel, etc.)
+    # - Use the anchor's surrounding container to look for nearby date/time elements
+    # - Parse dates to ISO YYYY-MM-DD when possible, otherwise None
 
-    # Find candidate containers using a broad list of selectors to be resilient.
-    try:
-        containers = await page.query_selector_all(COMBINED_ITEM_SELECTOR)
-    except Exception:
-        containers = []
+    # Get all anchors that match the class used in examples
+    anchors = await page.query_selector_all("a.text-navy-200")
 
-    # If no containers found, fall back to selecting items that contain links in article listing regions:
-    if not containers:
+    # Common external domains / short labels to ignore (social icons, nav shortcuts)
+    skip_domains = ("facebook.com", "twitter.com", "youtube.com", "instagram.com", "linkedin.com")
+    skip_texts = {"facebook", "twitter", "youtube", "instagram", "rss", "linkedin"}
+
+    for a in anchors:
         try:
-            containers = await page.query_selector_all("main, .content, .site-content, #content, .archive, .blog")
-            # if that yields containers, we'll search anchors inside them later
-        except Exception:
-            containers = []
-
-    # Primary pass: if we have container elements, extract items from them
-    if containers:
-        for el in containers:
-            try:
-                # Attempt to find a title anchor inside the container using common heading selectors
-                title_el = await el.query_selector("h1 a, h2 a, h3 a, .entry-title a, .post-title a, a[rel='bookmark'], a.title, .title a")
-
-                # If no heading anchor, try the first anchor with visible text
-                if not title_el:
-                    anchors = await el.query_selector_all("a[href]")
-                    title_el = None
-                    for a in anchors:
-                        txt = await _safe_text(a)
-                        href = await _safe_attr(a, "href")
-                        if txt and href and len(txt) > 3:
-                            title_el = a
-                            break
-
-                title = await _safe_text(title_el) if title_el else None
-
-                # If title still missing, try aria-label or title attribute
-                if not title and title_el:
-                    title = (await _safe_attr(title_el, "aria-label")) or (await _safe_attr(title_el, "title"))
-                    if title:
-                        title = title.strip()
-
-                # Extract URL - prioritize href from title anchor
-                url = None
-                if title_el:
-                    href = await _safe_attr(title_el, "href")
-                    if href:
-                        url = urllib.parse.urljoin(base_url, href.strip())
-
-                # If still no URL, try first anchor in container
-                if not url:
-                    first_anchor = await el.query_selector("a[href]")
-                    if first_anchor:
-                        href = await _safe_attr(first_anchor, "href")
-                        if href:
-                            url = urllib.parse.urljoin(base_url, href.strip())
-
-                # Normalize url (remove fragments)
-                if url:
-                    try:
-                        parsed = urllib.parse.urlparse(url)
-                        url = urllib.parse.urlunparse(parsed._replace(fragment=""))
-                    except Exception:
-                        pass
-
-                # Extract date: prefer <time datetime> or time text, then common classes
-                date = None
-                time_el = await el.query_selector("time[datetime], time")
-                if time_el:
-                    datetime_attr = await _safe_attr(time_el, "datetime")
-                    if datetime_attr:
-                        date = await _parse_date_string(datetime_attr)
-                    else:
-                        time_text = await _safe_text(time_el)
-                        date = await _parse_date_string(time_text)
-
-                if not date:
-                    # try common date class selectors
-                    date_candidates = await el.query_selector_all(".post-date, .entry-date, .date, .published, .meta .date, .post-meta time, .meta-date, .time")
-                    for dc in date_candidates:
-                        txt = await _safe_text(dc)
-                        date = await _parse_date_string(txt)
-                        if date:
-                            break
-
-                # Required fields: title and url
-                if not title or not url:
-                    # skip incomplete items
-                    continue
-
-                # De-duplicate by URL
-                if url in seen_urls:
-                    continue
-                seen_urls.add(url)
-
-                items.append({
-                    'title': title,
-                    'date': date,
-                    'url': url,
-                    'scraper': SCRAPER_MODULE_PATH,
-                })
-
-            except Exception:
-                # be tolerant of malformed items; skip and continue
+            href = await a.get_attribute('href')
+            if not href:
                 continue
 
-    # Secondary fallback: If no items found from containers, scan anchors across the page and heuristically detect article links.
-    if not items:
-        try:
-            anchors = await page.query_selector_all("main a[href], article a[href], a[href]")
-        except Exception:
-            anchors = []
+            # Resolve relative URLs
+            href = urllib.parse.urljoin(page.url, href)
 
-        for a in anchors:
+            # Filter out obvious external/social links
+            lower_href = href.lower()
+            if any(d in lower_href for d in skip_domains) or lower_href.startswith(("mailto:", "tel:")):
+                continue
+
+            # Extract text content for title; use text_content() to handle hidden text as requested
+            raw_text = await a.text_content()
+            if not raw_text:
+                continue
+            title = raw_text.strip()
+            if not title:
+                continue
+
+            # Skip very short labels or known social words
+            if len(title) < 4 and title.lower() in skip_texts:
+                continue
+            # Also skip titles that are very short (likely icons/labels)
+            if len(title) <= 2:
+                continue
+
+            # Attempt to find a nearby date within a reasonable ancestor
+            # Execute JS in page context to search for time/date within closest article-like ancestor
+            date_str = await a.evaluate(
+                """(anchor) => {
+                    // Find the closest semantic container that might contain metadata
+                    const ancestor = anchor.closest('article, li, .post, .entry, .card, .grid-item, .space-y-2, .space-y-4') || anchor.parentElement;
+                    if (!ancestor) return null;
+
+                    // Common date selectors
+                    const selectors = [
+                        'time[datetime]',
+                        'time',
+                        '[datetime]',
+                        'span[class*=date]',
+                        '[itemprop*=datePublished]',
+                        'meta[itemprop*=datePublished]',
+                        'meta[property=\"article:published_time\"]'
+                    ];
+
+                    for (const sel of selectors) {
+                        const el = ancestor.querySelector(sel);
+                        if (el) {
+                            // Pull datetime/content attributes first when available
+                            if (el.getAttribute && el.getAttribute('datetime')) return el.getAttribute('datetime');
+                            if (el.getAttribute && el.getAttribute('content')) return el.getAttribute('content');
+                            if (el.textContent) return el.textContent.trim();
+                        }
+                    }
+                    return null;
+                }"""
+            )
+
+            # Normalize date to YYYY-MM-DD if possible
+            date_iso = None
+            if date_str:
+                try:
+                    # parse can handle many formats and ISO strings
+                    dt = parse(date_str, fuzzy=True)
+                    date_iso = dt.date().isoformat()
+                except Exception:
+                    # If parsing fails, leave as None per requirements
+                    date_iso = None
+
+            item = {
+                'title': title,
+                'date': date_iso,
+                'url': href,
+                'scraper': SCRAPER_MODULE_PATH,
+            }
+            items.append(item)
+
+        except Exception:
+            # Be resilient to individual element errors; skip problematic anchors
+            continue
+
+    # If no items found via the class-based anchors, try a fallback:
+    # anchors inside list items (ul.space-y-2 li a), which look like internal show/article links
+    if not items:
+        fallback_anchors = await page.query_selector_all("ul.space-y-2 li a")
+        for a in fallback_anchors:
             try:
-                href = await _safe_attr(a, "href")
-                txt = await _safe_text(a)
-                # try to get title from aria-label/title attr if text is empty
-                if not txt or len(txt) < 4:
-                    txt = (await _safe_attr(a, "aria-label")) or (await _safe_attr(a, "title")) or txt
+                href = await a.get_attribute('href')
                 if not href:
                     continue
-                href = href.strip()
-                # Skip fragments and mailto/tel
-                if href.startswith('#') or href.startswith('mailto:') or href.startswith('tel:'):
+                href = urllib.parse.urljoin(page.url, href)
+                lower_href = href.lower()
+                if lower_href.startswith(("mailto:", "tel:")):
                     continue
-                # Normalize
-                url = urllib.parse.urljoin(base_url, href)
-                # Skip obvious non-article assets
-                lower = url.lower()
-                if any(lower.endswith(ext) for ext in ('.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.pdf')):
+                raw_text = await a.text_content()
+                if not raw_text:
                     continue
-                # Skip links to categories or tags or pagination
-                if '/category/' in url or '/tag/' in url or '/page/' in url:
-                    # but allow if link text looks like an article (long title)
-                    if not txt or len(txt) < 10:
-                        continue
-                # Heuristic: require reasonable title text
-                if not txt or len(txt) < 8:
+                title = raw_text.strip()
+                if not title:
                     continue
 
-                # Remove fragment
-                try:
-                    parsed = urllib.parse.urlparse(url)
-                    url = urllib.parse.urlunparse(parsed._replace(fragment=""))
-                except Exception:
-                    pass
+                # Attempt date near this anchor similar to above
+                date_str = await a.evaluate(
+                    """(anchor) => {
+                        const ancestor = anchor.closest('li, article, .post, .entry') || anchor.parentElement;
+                        if (!ancestor) return null;
+                        const el = ancestor.querySelector('time[datetime], time, [datetime], span[class*=date]');
+                        if (!el) return null;
+                        if (el.getAttribute && el.getAttribute('datetime')) return el.getAttribute('datetime');
+                        if (el.getAttribute && el.getAttribute('content')) return el.getAttribute('content');
+                        return el.textContent ? el.textContent.trim() : null;
+                    }"""
+                )
+                date_iso = None
+                if date_str:
+                    try:
+                        dt = parse(date_str, fuzzy=True)
+                        date_iso = dt.date().isoformat()
+                    except Exception:
+                        date_iso = None
 
-                if url in seen_urls:
-                    continue
-                seen_urls.add(url)
-
-                items.append({
-                    'title': txt.strip(),
-                    'date': None,
-                    'url': url,
+                item = {
+                    'title': title,
+                    'date': date_iso,
+                    'url': href,
                     'scraper': SCRAPER_MODULE_PATH,
-                })
+                }
+                items.append(item)
             except Exception:
                 continue
 
-    return items
+    # Final safety: deduplicate by (title, url)
+    seen = set()
+    unique_items = []
+    for it in items:
+        key = (it.get('title'), it.get('url'))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_items.append(it)
 
+    return unique_items
 
 async def advance_page(page):
     """
@@ -310,136 +212,74 @@ async def advance_page(page):
     Parameters:
         page: Playwright page object
     """
-    # 1) Try to find an explicit "next page" link (href navigation)
-    try:
-        for sel in NEXT_PAGE_LINK_SELECTORS:
-            try:
-                el = await page.query_selector(sel)
-            except Exception:
-                el = None
+    # Try common "next" / "load more" selectors first
+    next_selectors = [
+        'a[rel="next"]',
+        'a:has-text("Next")',
+        'a:has-text("next")',
+        'a:has-text("More")',
+        'a:has-text("More Posts")',
+        'button:has-text("Load more")',
+        'button:has-text("Load More")',
+        'button.load-more',
+        'div.load-more button',
+    ]
+
+    for sel in next_selectors:
+        try:
+            el = await page.query_selector(sel)
             if el:
-                href = await _safe_attr(el, "href")
+                # If it's a link with href, navigate to it
+                href = await el.get_attribute('href')
                 if href:
-                    next_url = urllib.parse.urljoin(base_url, href.strip())
+                    next_url = urllib.parse.urljoin(page.url, href)
                     try:
                         await page.goto(next_url)
-                        # allow content to load
-                        await page.wait_for_load_state('load', timeout=10000)
-                        await page.wait_for_load_state('networkidle', timeout=10000)
-                    except PlaywrightTimeoutError:
-                        # if navigation didn't finish, still proceed
+                        return
+                    except Exception:
+                        # If navigation fails, attempt to click instead
                         pass
-                    return
 
-                # if element is a linkless anchor (JS click)
+                # If clickable element (button or link without href), attempt to click it
                 try:
+                    # Scroll into view and click
                     await el.scroll_into_view_if_needed()
                     await el.click()
-                    await page.wait_for_load_state('networkidle', timeout=7000)
-                    return
-                except Exception:
-                    # fall through to next selector
-                    pass
-    except Exception:
-        pass
-
-    # 2) Try to find "load more" buttons and click them (AJAX load)
-    try:
-        for sel in LOAD_MORE_BUTTON_SELECTORS:
-            try:
-                btn = await page.query_selector(sel)
-            except Exception:
-                btn = None
-            if btn:
-                try:
-                    await btn.scroll_into_view_if_needed()
-                except Exception:
-                    pass
-                try:
-                    await btn.click()
-                    # give AJAX some time
-                    await page.wait_for_load_state('networkidle', timeout=7000)
-                    # sometimes content loads slowly
+                    # Wait a short time for new content to load
                     await page.wait_for_timeout(2000)
                     return
                 except Exception:
-                    # try JS click fallback
-                    try:
-                        await page.evaluate("(el) => el.click()", btn)
-                        await page.wait_for_timeout(2000)
-                        return
-                    except Exception:
-                        continue
-    except Exception:
-        pass
-
-    # 3) Fallback: infinite scroll behavior.
-    try:
-        # Count current items
-        try:
-            prev_items = await page.query_selector_all(COMBINED_ITEM_SELECTOR)
-            prev_count = len(prev_items) if prev_items else 0
+                    # If click fails, continue to next selector
+                    continue
         except Exception:
-            prev_count = 0
+            continue
 
-        # Perform a series of scrolls to attempt to load more content
-        max_scrolls = 5
-        for _ in range(max_scrolls):
-            # scroll to bottom
-            try:
-                await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-            except Exception:
-                pass
-            # wait for potential lazy load
-            await page.wait_for_timeout(2500)
-
-            # check new count
-            try:
-                new_items = await page.query_selector_all(COMBINED_ITEM_SELECTOR)
-                new_count = len(new_items) if new_items else 0
-            except Exception:
-                new_count = prev_count
-
-            if new_count > prev_count:
-                # new content loaded; return to let caller scrape again
-                return
-            prev_count = new_count
-
-        # If no new items after scrolling, do one final wait to ensure not missing delayed loads
+    # No explicit pagination found — fallback to infinite scroll behavior.
+    # Perform a series of incremental scrolls to trigger lazy-loading.
+    try:
+        # Number of incremental scroll attempts per advance
+        for _ in range(3):
+            await page.evaluate("""() => {
+                window.scrollBy({ top: window.innerHeight * 3, left: 0, behavior: 'smooth' });
+            }""")
+            # Wait for potential network requests / rendering
+            await page.wait_for_timeout(1500)
+        # Final scroll to bottom
+        await page.evaluate("() => window.scrollTo(0, document.body.scrollHeight)")
         await page.wait_for_timeout(2000)
     except Exception:
-        # If anything goes wrong, just return and let the caller detect no progress.
-        return
-
+        # If anything goes wrong in scrolling, just wait briefly as a last resort
+        await page.wait_for_timeout(2000)
 
 async def get_first_page(base_url=base_url):
     """Fetch only the first page of articles."""
     async with PlaywrightContext() as context:
         page = await context.new_page()
-        try:
-            # apply stealth if available, but do not fail if it errors
-            try:
-                await Stealth().apply_stealth_async(page)
-            except Exception:
-                try:
-                    # fallback to other possible API name
-                    await Stealth().apply_async(page)
-                except Exception:
-                    pass
-        except Exception:
-            pass
-
-        try:
-            await page.goto(base_url)
-            try:
-                await page.wait_for_load_state('networkidle', timeout=10000)
-            except Exception:
-                await page.wait_for_timeout(1500)
-            items = await scrape_page(page)
-        finally:
-            await page.close()
+        await Stealth().apply_stealth_async(page)
+        await page.goto(base_url)
+        items = await scrape_page(page)
+        await page.close()
         return items
-
 
 async def get_all_articles(base_url=base_url, max_pages=100):
     """Fetch all articles from all pages."""
@@ -448,64 +288,39 @@ async def get_all_articles(base_url=base_url, max_pages=100):
         items = []
         seen = set()
         page = await context.new_page()
-        try:
-            try:
-                await Stealth().apply_stealth_async(page)
-            except Exception:
-                try:
-                    await Stealth().apply_async(page)
-                except Exception:
-                    pass
-        except Exception:
-            pass
+        await Stealth().apply_stealth_async(page)
+        page_count = 0
+
+        await page.goto(base_url)
 
         page_count = 0
-        await page.goto(base_url)
+        item_count = 0  # previous count
+        new_item_count = 0  # current count
+
         try:
-            try:
-                await page.wait_for_load_state('networkidle', timeout=10000)
-            except Exception:
-                await page.wait_for_timeout(1500)
+            while page_count < max_pages:
+                page_items = await scrape_page(page)
+                for item in page_items:
+                    key = tuple(sorted((k, v) for k, v in item.items() if v is not None))
+                    if key not in seen:
+                        seen.add(key)
+                        items.append(item)
+                new_item_count = len(items)
 
-            page_count = 0
-            item_count = 0  # previous count
-            new_item_count = 0  # current count
+                if new_item_count <= item_count:
+                    break
 
-            try:
-                while page_count < max_pages:
-                    page_items = await scrape_page(page)
-                    for item in page_items:
-                        # deduplicate by URL when available, otherwise use title+date
-                        key_url = item.get('url')
-                        if key_url:
-                            key = ('url', key_url)
-                        else:
-                            key = ('title_date', item.get('title'), item.get('date'))
-                        if key not in seen:
-                            seen.add(key)
-                            items.append(item)
-                    new_item_count = len(items)
+                page_count += 1
+                item_count = new_item_count
 
-                    if new_item_count <= item_count:
-                        # no progress, stop pagination
-                        break
+                await advance_page(page)
 
-                    page_count += 1
-                    item_count = new_item_count
+        except Exception as e:
+            print(f"Error occurred while getting next page: {e}")
 
-                    await advance_page(page)
 
-            except Exception as e:
-                print(f"Error occurred while getting next page: {e}")
-
-        finally:
-            try:
-                await page.close()
-            except Exception:
-                pass
-
+        await page.close()
         return items
-
 
 async def main():
     """Main execution function."""
@@ -513,10 +328,9 @@ async def main():
 
     # Save results to JSON
     result_path = os.path.join(os.path.dirname(__file__), 'result.json')
-    with open(result_path, 'w', encoding='utf-8') as f:
-        json.dump(all_items, f, indent=2, ensure_ascii=False)
+    with open(result_path, 'w') as f:
+        json.dump(all_items, f, indent=2)
     print(f"Results saved to {result_path}")
-
 
 if __name__ == "__main__":
     asyncio.run(main())

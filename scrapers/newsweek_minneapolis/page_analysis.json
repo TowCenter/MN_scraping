@@ -1,15 +1,15 @@
 {
   "item_selectors": [
-    "a.NewsweekLink_link__BTn_o",
-    ".AITrendingStories_trendingStory__Ky_u5"
+    ".AITrendingStories_trendingStory__Ky_u5",
+    "a.NewsweekLink_link__BTn_o"
   ],
   "next_page_selectors": [],
   "item_examples": {
-    "a.NewsweekLink_link__BTn_o": [
-      "<a class=\"NewsweekLink_link__BTn_o BreakingBar_title__N0xpl\" href=\"/forest-hills-station-stabbing-shooting-boston-mbta-massachusetts-11712591\">Incident at Boston MBTA Station Injures Six: What to Know</a>"
-    ],
     ".AITrendingStories_trendingStory__Ky_u5": [
-      "<div class=\"AITrendingStories_trendingStory__Ky_u5\" role=\"button\" tabindex=\"0\"><svg color=\"var(--foreground-muted)\" fill=\"none\" height=\"13\" viewbox=\"0 0 12 13\" width=\"12\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M11.9814 7.44107H10.9814V4.63345L7.09668 8.51822L4.35645 5.77798L0.873047 9.26138L0.166016 8.55435L4.35645 4.36392L7.09668 7.10416L10.2744 3.92642H7.4668V2.92642H11.9814V7.44107Z\" fill=\"currentColor\"></path></svg><span class=\"AITrendingStories_trendingStoryTitle__UXV_7\">Milk Recall Update As FDA Sets Risk Level</span></div>"
+      "<div class=\"AITrendingStories_trendingStory__Ky_u5\" role=\"button\" tabindex=\"0\"><svg color=\"var(--foreground-muted)\" fill=\"none\" height=\"13\" viewbox=\"0 0 12 13\" width=\"12\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M11.9814 7.44107H10.9814V4.63345L7.09668 8.51822L4.35645 5.77798L0.873047 9.26138L0.166016 8.55435L4.35645 4.36392L7.09668 7.10416L10.2744 3.92642H7.4668V2.92642H11.9814V7.44107Z\" fill=\"currentColor\"></path></svg><span class=\"AITrendingStories_trendingStoryTitle__UXV_7\">Shock Over What Flyer Does During Short Flight: \u2018Incredibly Rude\u2019</span></div>"
+    ],
+    "a.NewsweekLink_link__BTn_o": [
+      "<a class=\"NewsweekLink_link__BTn_o BreakingBar_title__N0xpl\" href=\"/ice-sued-over-proposed-detention-center-11712570\">ICE Sued Over Proposed Detention Center</a>"
     ]
   },
   "next_page_examples": {},
@@ -19,20 +19,24 @@
   ],
   "title_examples": {
     "a.NewsweekLink_link__BTn_o": [
-      "<a class=\"NewsweekLink_link__BTn_o BreakingBar_title__N0xpl\" href=\"/forest-hills-station-stabbing-shooting-boston-mbta-massachusetts-11712591\">Incident at Boston MBTA Station Injures Six: What to Know</a>"
+      "<a class=\"NewsweekLink_link__BTn_o BreakingBar_title__N0xpl\" href=\"/ice-sued-over-proposed-detention-center-11712570\">ICE Sued Over Proposed Detention Center</a>"
     ],
     ".AITrendingStories_trendingStoryTitle__UXV_7": [
-      "<span class=\"AITrendingStories_trendingStoryTitle__UXV_7\">Milk Recall Update As FDA Sets Risk Level</span>"
+      "<span class=\"AITrendingStories_trendingStoryTitle__UXV_7\">Shock Over What Flyer Does During Short Flight: \u2018Incredibly Rude\u2019</span>"
     ]
   },
   "date_selectors": [],
   "date_examples": {},
   "url_selectors": [
-    "a.NewsweekLink_link__BTn_o"
+    "a.NewsweekLink_link__BTn_o",
+    "a.ArticleSideMenuItem_subMenuItem__0mjzO"
   ],
   "url_examples": {
     "a.NewsweekLink_link__BTn_o": [
-      "<a class=\"NewsweekLink_link__BTn_o BreakingBar_title__N0xpl\" href=\"/forest-hills-station-stabbing-shooting-boston-mbta-massachusetts-11712591\">Incident at Boston MBTA Station Injures Six: What to Know</a>"
+      "<a class=\"NewsweekLink_link__BTn_o BreakingBar_title__N0xpl\" href=\"/ice-sued-over-proposed-detention-center-11712570\">ICE Sued Over Proposed Detention Center</a>"
+    ],
+    "a.ArticleSideMenuItem_subMenuItem__0mjzO": [
+      "<a class=\"Actionable_root__LiyqW Link_root__57ifs ArticleSideMenuItem_subMenuItem__0mjzO Link_link___2y9H Link_default__SCGtk Link_secondary__zNvZm Link_colorPrimary__9yoFy Link_--variant-plain__2p4EC Link_--color-primary__sWD8y\" href=\"https://www.newsweek.com/news\">News</a>"
     ]
   }
 }

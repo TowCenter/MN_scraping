@@ -1,237 +1,126 @@
+"""
+Articles Scraper for WCCO This Morning / CBS Minnesota
+
+Target URL: https://www.cbsnews.com/minnesota/local-news/
+Content type: articles
+Fields: title, date, url
+
+Note: CBS News Playwright scraping hangs due to heavy JS. This scraper
+uses the CBS Minnesota RSS feed instead, which is fast and reliable.
+"""
+
 import json
 import os
-import re
-import urllib.parse
-from dateutil.parser import parse
-from playwright.async_api import async_playwright
-from playwright_stealth import Stealth  # v2.0.1 API
 import asyncio
+import urllib.request
+import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
 
 base_url = 'https://www.cbsnews.com/minnesota/local-news/'
 
-# Scraper module path for tracking the source of scraped data
 SCRAPER_MODULE_PATH = '.'.join(os.path.splitext(os.path.abspath(__file__))[0].split(os.sep)[-3:])
 
-# Operator user-agent (set in operator.json)
-USER_AGENT = ''
+RSS_BASE_URL = "https://www.cbsnews.com/minnesota/latest/rss/local-news"
+ITEMS_PER_PAGE = 30
 
-class PlaywrightContext:
-    """Context manager for Playwright browser sessions."""
-    async def __aenter__(self):
-        self.playwright = await async_playwright().start()
-        self.browser = await self.playwright.chromium.launch()
-        context_kwargs = {'user_agent': USER_AGENT} if USER_AGENT else {}
-        self.context = await self.browser.new_context(**context_kwargs)
-        return self.context
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/121.0.0.0 Safari/537.36"
+)
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.browser.close()
-        await self.playwright.stop()
 
-async def scrape_page(page):
-    """
-    Extract article data from the current page.
+def _fetch_rss(url):
+    """Fetch RSS feed and return parsed XML root."""
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return ET.fromstring(resp.read())
 
-    Parameters:
-        page: Playwright page object
 
-    Returns:
-        List of dictionaries containing article data with keys:
-        - title: Headline or title of the article
-        - date: Publication date in YYYY-MM-DD format or None
-        - url: Link to the full article
-        - scraper: module path for traceability
-    """
+def _parse_items(root):
+    """Parse RSS XML into article dicts."""
     items = []
-
-    # Use a broad, stable container selector for article items
-    article_selectors = 'article.item'
-    article_elements = await page.query_selector_all(article_selectors)
-
-    for art in article_elements:
+    for item in root.iter("item"):
         try:
-            # Find the anchor that wraps the item (source of URL)
-            anchor = await art.query_selector('a.item__anchor')
-            href = None
-            if anchor:
-                href_val = await anchor.get_attribute('href')
-                if href_val:
-                    href = urllib.parse.urljoin(base_url, href_val.strip())
+            title_el = item.find("title")
+            link_el = item.find("link")
+            pub_date_el = item.find("pubDate")
 
-            # Title: prefer the main headline (.item__hed), fallback to component headline
-            title_el = await art.query_selector('h4.item__hed')
-            if not title_el:
-                title_el = await art.query_selector('h4.item__component-headline')
-            title = None
-            if title_el:
-                title_text = await title_el.text_content()
-                if title_text:
-                    title = title_text.strip()
+            if title_el is None or link_el is None:
+                continue
 
-            # Date: look for list item with class item__date
-            date_el = await art.query_selector('li.item__date')
-            date_value = None
-            if date_el:
-                date_text = (await date_el.text_content() or '').strip()
-                # If the date text looks relative (e.g., "50M ago", "3H ago", "27M ago"), treat as None
-                lower = date_text.lower()
-                if date_text:
-                    # Patterns indicating relative times
-                    if ('ago' in lower) or re.search(r'^\d+\s*[mh]\b', lower) or re.search(r'\b(min|minute|hour|hr|h|m)\b', lower):
-                        date_value = None
-                    else:
-                        try:
-                            dt = parse(date_text, fuzzy=True)
-                            date_value = dt.date().isoformat()
-                        except Exception:
-                            date_value = None
+            title = (title_el.text or "").strip()
+            url = (link_el.text or "").strip()
+            if not title or not url:
+                continue
 
-            # Only include items that have at least title and url
-            if title and href:
-                items.append({
-                    'title': title,
-                    'date': date_value,
-                    'url': href,
-                    'scraper': SCRAPER_MODULE_PATH,
-                })
+            date_str = None
+            if pub_date_el is not None and pub_date_el.text:
+                try:
+                    dt = parsedate_to_datetime(pub_date_el.text.strip())
+                    date_str = dt.strftime("%Y-%m-%d")
+                except Exception:
+                    pass
 
+            items.append({
+                "title": title,
+                "date": date_str,
+                "url": url,
+                "scraper": SCRAPER_MODULE_PATH,
+            })
         except Exception:
-            # Skip malformed article entries but continue processing others
             continue
 
     return items
 
-async def advance_page(page):
-    """
-    Finds the next page button or link to navigate to the next page of articles.
-    Clicks button or navigates to next page URL if found. Scroll load more button into view if not visible.
-    Defaults to infinite scroll if no pagination found.
-
-    Parameters:
-        page: Playwright page object
-    """
-    # Try to find "view more" / pagination link(s). Prefer anchors with class component__view-more.
-    try:
-        view_more_selectors = 'a.component__view-more'
-        view_more_links = await page.query_selector_all(view_more_selectors)
-        chosen = None
-        chosen_href = None
-
-        for link in view_more_links:
-            href = await link.get_attribute('href')
-            # Skip empty hrefs
-            if not href:
-                continue
-            full = urllib.parse.urljoin(base_url, href.strip())
-            # Prefer links that look like the next page (contain '/minnesota/local-news/')
-            if '/minnesota/local-news/' in full:
-                chosen = link
-                chosen_href = full
-                break
-            # otherwise accept the first available link
-            if not chosen:
-                chosen = link
-                chosen_href = full
-
-        if chosen and chosen_href:
-            try:
-                # Scroll into view then click; some "view more" buttons load content via JS
-                await chosen.scroll_into_view_if_needed()
-                # If the element is a real link that navigates, clicking may navigate.
-                await chosen.click()
-                # Wait a bit for new content to load
-                await page.wait_for_load_state('networkidle', timeout=5000)
-                # Also give the page a moment to render loaded items
-                await page.wait_for_timeout(1500)
-                return
-            except Exception:
-                # If click fails (e.g., intercepted), fallback to navigating directly
-                try:
-                    await page.goto(chosen_href)
-                    await page.wait_for_load_state('networkidle', timeout=5000)
-                    await page.wait_for_timeout(1000)
-                    return
-                except Exception:
-                    # If navigation fails, fall through to infinite scroll fallback
-                    pass
-
-    except Exception:
-        # Any errors finding/clicking view more will fall back to infinite scroll below
-        pass
-
-    # Fallback: infinite scroll (scroll to bottom and wait for more content to load)
-    try:
-        # Perform a few incremental scrolls to the bottom to trigger lazy loading
-        for _ in range(3):
-            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-            await page.wait_for_timeout(2000)
-        # Final wait to let content settle
-        await page.wait_for_timeout(1500)
-    except Exception:
-        # If scroll fails, do nothing
-        await page.wait_for_timeout(1000)
 
 async def get_first_page(base_url=base_url):
-    """Fetch only the first page of articles."""
-    async with PlaywrightContext() as context:
-        page = await context.new_page()
-        await Stealth().apply_stealth_async(page)
-        await page.goto(base_url)
-        items = await scrape_page(page)
-        await page.close()
-        return items
+    """Fetch the latest articles from the RSS feed."""
+    root = _fetch_rss(RSS_BASE_URL)
+    return _parse_items(root)
+
 
 async def get_all_articles(base_url=base_url, max_pages=100):
-    """Fetch all articles from all pages."""
-    async with PlaywrightContext() as context:
-        items = []
-        seen = set()
-        page = await context.new_page()
-        await Stealth().apply_stealth_async(page)
-        page_count = 0
+    """Fetch articles across multiple RSS pages using ?start= pagination."""
+    all_items = []
+    seen_urls = set()
 
-        await page.goto(base_url)
-
-        page_count = 0
-        item_count = 0  # previous count
-        new_item_count = 0  # current count
+    for page_num in range(max_pages):
+        start = page_num * ITEMS_PER_PAGE
+        url = RSS_BASE_URL if start == 0 else f"{RSS_BASE_URL}?start={start}"
 
         try:
-            while page_count < max_pages:
-                page_items = await scrape_page(page)
-                for item in page_items:
-                    # Use a stable key for deduplication (exclude None values)
-                    key = tuple(sorted((k, v) for k, v in item.items() if v is not None))
-                    if key not in seen:
-                        seen.add(key)
-                        items.append(item)
-                new_item_count = len(items)
+            root = _fetch_rss(url)
+            page_items = _parse_items(root)
+        except Exception:
+            break
 
-                # If no new items were added after scraping, stop
-                if new_item_count <= item_count:
-                    break
+        if not page_items:
+            break
 
-                page_count += 1
-                item_count = new_item_count
+        new_count = 0
+        for item in page_items:
+            if item["url"] not in seen_urls:
+                seen_urls.add(item["url"])
+                all_items.append(item)
+                new_count += 1
 
-                # Try to advance to the next page / load more content
-                await advance_page(page)
+        # If no new articles found on this page, we've exhausted the feed
+        if new_count == 0:
+            break
 
-        except Exception as e:
-            print(f"Error occurred while getting next page: {e}")
+    return all_items
 
-        await page.close()
-        return items
 
 async def main():
     """Main execution function."""
     all_items = await get_all_articles()
 
-    # Save results to JSON
     result_path = os.path.join(os.path.dirname(__file__), 'result.json')
     with open(result_path, 'w') as f:
         json.dump(all_items, f, indent=2)
-    print(f"Results saved to {result_path}")
+    print(f"Results saved to {result_path} ({len(all_items)} articles)")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
