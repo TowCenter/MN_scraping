@@ -54,16 +54,24 @@ def get_db():
     )
     return client[DB_NAME]
 
+def _make_client(uri):
+    return MongoClient(
+        uri,
+        serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=5000,
+        socketTimeoutMS=30000,
+    )
+
 @st.cache_data(ttl=300)
 def get_organizations_data(mongo_uri, db_name):
-    client = MongoClient(mongo_uri)
+    client = _make_client(mongo_uri)
     db = client[db_name]
     return list(db[SCRAPERS_COL].find({}, {"name": 1, "color": 1, "scrapers": 1}))
 
 @st.cache_data(ttl=300)
 def get_scraper_summary(mongo_uri, db_name):
     """Build per-scraper summary stats via MongoDB aggregation."""
-    client = MongoClient(mongo_uri)
+    client = _make_client(mongo_uri)
     db = client[db_name]
 
     dec1 = datetime(2025, 12, 1, tzinfo=timezone.utc)
@@ -139,7 +147,7 @@ def get_scraper_summary(mongo_uri, db_name):
 
 @st.cache_data(ttl=300)
 def build_csv(mongo_uri, db_name):
-    client = MongoClient(mongo_uri)
+    client = _make_client(mongo_uri)
     db = client[db_name]
     cursor = db[CONTENT_COL].find({}, {"_id": 0})
     rows = []
@@ -222,13 +230,17 @@ def main():
         selected_org = st.selectbox("Filter by org", org_options, key="health_school_filter")
     with fc2:
         st.markdown("<div style='padding-top:1.65rem'></div>", unsafe_allow_html=True)
-        st.download_button(
-            label="Export CSV",
-            data=build_csv(MONGO_URI, DB_NAME),
-            file_name="scraped_items.csv",
-            mime="text/csv",
-            use_container_width=True,
-        )
+        if st.button("Prepare CSV Export", use_container_width=True):
+            with st.spinner("Building CSV…"):
+                st.session_state["csv_data"] = build_csv(MONGO_URI, DB_NAME)
+        if st.session_state.get("csv_data"):
+            st.download_button(
+                label="Download CSV",
+                data=st.session_state["csv_data"],
+                file_name="scraped_items.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )
 
     # === FLAT SCRAPER TABLE ===
     scraper_stats = get_scraper_summary(MONGO_URI, DB_NAME)
